@@ -1,0 +1,52 @@
+<!-- Reserve the navbar's space in the page while the bar stays fixed on screen. -->
+<div class="h-[4.25rem] sm:h-[4.75rem]" aria-hidden="true"></div>
+<div class="page-shell fixed inset-x-0 top-0 z-40 pt-3 sm:pt-4">
+  <div class="flex items-center justify-between gap-4 rounded-full border border-surface-high bg-background/90 px-4 py-2.5 shadow-lg shadow-on-background/5 backdrop-blur-xl sm:px-6">
+    <a class="flex shrink-0 items-center gap-2.5" href="index.html" aria-label="Tablely home">
+      <img class="h-9 w-9 object-contain sm:h-10 sm:w-10" src="/images/logo/tablely-mark.svg" alt="" />
+      <span class="font-display text-xl font-extrabold tracking-tight text-primary sm:text-2xl">Tablely</span>
+    </a>
+
+    <nav class="hidden items-center gap-1 rounded-full bg-surface-low p-1 md:flex" aria-label="Main navigation">
+      <a class="nav-link nav-link-active" aria-current="page" href="index.html">Home</a>
+      <a class="nav-link" href="explore.html">Explore</a>
+      <a class="nav-link" href="my-bookings.html">My Bookings</a>
+      <a class="nav-link" href="my-favorites.html">My Favorites</a>
+      <a class="nav-link" href="my-reviews.html">My Reviews</a>
+    </nav>
+
+    <div class="flex shrink-0 items-center gap-2">
+      <button class="icon-button inline-flex" type="button" data-theme-toggle aria-label="Switch to dark theme" title="Switch theme">
+        <span class="material-symbols-outlined" data-theme-icon>dark_mode</span>
+      </button>
+      <a data-auth-signin data-auth-desktop class="hidden rounded-full px-3 py-2 text-sm font-semibold text-on-surface-variant transition hover:text-primary" href="login.html">Sign in</a>
+      <button data-auth-signout data-auth-desktop class="hidden rounded-full px-3 py-2 text-sm font-semibold text-on-surface-variant transition hover:text-primary" type="button">Sign out</button>
+      <a class="hidden rounded-full bg-primary px-5 py-2.5 text-sm font-bold text-on-primary shadow-sm transition hover:brightness-110 sm:inline-flex" href="explore.html">Book a table</a>
+      <span data-user-initial data-auth-desktop class="hidden h-8 w-8 items-center justify-center rounded-full bg-primary text-sm font-bold text-on-primary ring-2 ring-primary/20" aria-hidden="true"></span>
+      <button class="icon-button inline-flex md:hidden" type="button" data-menu-toggle aria-expanded="false" aria-controls="mobile-menu" aria-label="Open menu">
+        <span class="material-symbols-outlined" data-menu-icon>menu</span>
+      </button>
+    </div>
+  </div>
+
+  <nav id="mobile-menu" class="mt-2 hidden rounded-3xl border border-surface-high bg-background/95 p-3 shadow-xl backdrop-blur-xl md:hidden" aria-label="Mobile navigation">
+    <div class="flex flex-col gap-1">
+      <a class="mobile-nav-link mobile-nav-link-active" aria-current="page" href="index.html">Home</a>
+      <a class="mobile-nav-link" href="explore.html">Explore</a>
+      <a class="mobile-nav-link" href="my-bookings.html">My Bookings</a>
+      <a class="mobile-nav-link" href="my-favorites.html">My Favorites</a>
+      <a class="mobile-nav-link" href="my-reviews.html">My Reviews</a>
+      <div class="mt-2 border-t border-surface-high pt-3">
+        <div class="flex items-center justify-between px-2 pb-2">
+          <div class="flex items-center gap-2.5 text-sm font-semibold text-on-surface">
+            <span data-user-initial class="hidden h-8 w-8 items-center justify-center rounded-full bg-primary text-sm font-bold text-on-primary" aria-hidden="true"></span>
+            <span data-user-label>Guest account</span>
+          </div>
+          <a data-auth-signin class="text-sm font-bold text-primary" href="login.html">Sign in</a>
+          <button data-auth-signout class="hidden text-sm font-bold text-primary" type="button">Sign out</button>
+        </div>
+        <a class="mt-2 flex justify-center rounded-full bg-primary px-4 py-3 font-bold text-on-primary" href="explore.html">Book a table</a>
+      </div>
+    </div>
+  </nav>
+</div>

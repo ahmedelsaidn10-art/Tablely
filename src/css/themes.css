@@ -1,0 +1,65 @@
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* Shared design tokens generate Tailwind color, spacing, and font utilities. */
+@theme {
+  --color-primary: #9c3e1e;
+  --color-primary-container: #bc5633;
+  --color-on-primary: #ffffff;
+  --color-on-primary-container: #fffbff;
+  --color-background: #fff8f4;
+  --color-on-background: #1f1b17;
+  --color-surface: #fff8f4;
+  --color-surface-low: #fbf2eb;
+  --color-surface-high: #efe7e0;
+  --color-surface-highest: #eae1da;
+  --color-on-surface: #1f1b17;
+  --color-on-surface-variant: #56423c;
+  --color-outline: #8a726b;
+  --color-tertiary: #8d4b00;
+  --color-tertiary-fixed: #ffdcc3;
+  --color-secondary: #645d53;
+  --color-secondary-fixed: #ebe1d4;
+  --color-secondary-fixed-dim: #cfc5b9;
+  --color-dark-base: #161311;
+  --color-dark-surface: #1a1614;
+  --color-dark-card: #221d1a;
+  --color-dark-elevated: #2a231f;
+  --color-dark-border: #3d342e;
+  --color-dark-text-primary: #f5efeb;
+  --color-dark-text-secondary: #a89f97;
+  --color-dark-primary: #d96b46;
+  --font-sans: "Inter", sans-serif;
+  --font-display: "Plus Jakarta Sans", sans-serif;
+  --spacing-margin: 2rem;
+  --spacing-margin-mobile: 1.25rem;
+  --spacing-gutter: 1.5rem;
+}
+
+:root {
+  color-scheme: light;
+  --page-background: #fff8f4;
+  --page-text: #1f1b17;
+}
+
+.dark {
+  color-scheme: dark;
+  --color-primary: #d96b46;
+  --color-primary-container: #9c3e1e;
+  --color-background: #161311;
+  --color-on-background: #f5efeb;
+  --color-surface: #1a1614;
+  --color-surface-low: #221d1a;
+  --color-surface-high: #2a231f;
+  --color-surface-highest: #3d342e;
+  --color-on-surface: #f5efeb;
+  --color-on-surface-variant: #a89f97;
+  --color-outline: #75685f;
+  --color-dark-base: #161311;
+  --color-dark-surface: #1a1614;
+  --color-dark-card: #221d1a;
+  --color-dark-elevated: #2a231f;
+  --color-dark-border: #3d342e;
+  --color-dark-text-primary: #f5efeb;
+  --color-dark-text-secondary: #a89f97;
+  --color-dark-primary: #d96b46;
+}

@@ -1,0 +1,128 @@
+* {
+  box-sizing: border-box;
+}
+
+html {
+  min-width: 320px;
+  scroll-behavior: smooth;
+}
+
+body {
+  min-height: 100vh;
+  margin: 0;
+  background: var(--color-background);
+  color: var(--color-on-background);
+  font-family: var(--font-sans);
+  transition: background-color 180ms ease, color 180ms ease;
+}
+
+button,
+input {
+  font: inherit;
+}
+
+button,
+a {
+  -webkit-tap-highlight-color: transparent;
+}
+
+img {
+  display: block;
+  max-width: 100%;
+}
+
+.material-symbols-outlined {
+  font-family: "Material Symbols Outlined";
+  font-weight: normal;
+  font-style: normal;
+  font-size: 1.25rem;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  white-space: nowrap;
+  word-wrap: normal;
+  direction: ltr;
+  -webkit-font-feature-settings: "liga";
+  -webkit-font-smoothing: antialiased;
+}
+
+.restaurant-card:hover .restaurant-card-image {
+  transform: scale(1.04);
+}
+
+.favorite-button[aria-pressed="true"] {
+  color: var(--color-primary);
+}
+
+.favorite-button[aria-pressed="true"] .material-symbols-outlined {
+  font-variation-settings: "FILL" 1;
+}
+
+.nav-link {
+  border-radius: 9999px;
+  padding: 0.625rem 1rem;
+  color: var(--color-on-surface-variant);
+  font-size: 0.875rem;
+  font-weight: 600;
+  transition: color 160ms ease, background-color 160ms ease;
+}
+
+.nav-link:hover,
+.mobile-nav-link:hover,
+.footer-link:hover {
+  color: var(--color-primary);
+}
+
+.nav-link-active {
+  background: var(--color-primary-container);
+  color: var(--color-on-primary);
+}
+
+.mobile-nav-link {
+  display: flex;
+  border-radius: 1rem;
+  padding: 0.75rem 1rem;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--color-on-surface);
+  transition: color 160ms ease, background-color 160ms ease;
+}
+
+.mobile-nav-link-active {
+  background: var(--color-primary-container);
+  color: var(--color-on-primary);
+}
+
+.icon-button {
+  width: 2.5rem;
+  height: 2.5rem;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid transparent;
+  border-radius: 9999px;
+  background: var(--color-surface-low);
+  color: var(--color-on-surface);
+  cursor: pointer;
+  transition: transform 150ms ease, background-color 150ms ease;
+}
+
+.icon-button:hover {
+  background: var(--color-surface-high);
+}
+
+.icon-button:active {
+  transform: scale(0.96);
+}
+
+.footer-link {
+  transition: color 160ms ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
+}

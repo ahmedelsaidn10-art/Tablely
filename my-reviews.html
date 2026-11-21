@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#fff8f4" />
+    <meta name="description" content="View, update, and manage your restaurant and cafe reviews on Tablely." />
+    <title>My Reviews | Tablely</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&family=Material+Symbols+Outlined:FILL@0..1&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/src/css/input.css" />
+    <script>
+      // Restore the selected theme before the page paints.
+      try {
+        const savedValue = localStorage.getItem('tablely-theme');
+        let savedTheme = savedValue;
+        try { savedTheme = JSON.parse(savedValue); } catch { /* Older values may be plain strings. */ }
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        if (savedTheme === 'dark' || (!savedTheme && prefersDark)) document.documentElement.classList.add('dark');
+      } catch {
+        // Keep the light theme if browser storage is unavailable.
+      }
+    </script>
+  </head>
+  <body class="overflow-x-hidden">
+    <header id="site-header"></header>
+
+    <main data-my-reviews-page class="page-shell min-h-[70vh] pb-16 pt-10 sm:pt-14">
+      <section aria-labelledby="reviews-title">
+        <div class="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+          <div class="max-w-3xl">
+            <p class="inline-flex items-center gap-2 rounded-full bg-primary/10 px-3.5 py-1.5 text-xs font-bold uppercase tracking-[0.16em] text-primary">
+              <span class="h-2 w-2 rounded-full bg-primary" aria-hidden="true"></span> Dining experiences &amp; feedback
+            </p>
+            <h1 id="reviews-title" class="mt-3 font-display text-3xl font-extrabold tracking-tight text-on-surface sm:text-4xl">My Reviews</h1>
+            <p class="mt-3 max-w-2xl text-sm leading-6 text-on-surface-variant sm:text-base">Your dining experiences matter. Manage your reviews and share feedback about places you have visited.</p>
+          </div>
+          <div class="flex items-center gap-3 rounded-2xl bg-surface-low px-4 py-3">
+            <span class="inline-flex h-10 w-10 items-center justify-center rounded-full bg-tertiary-fixed text-tertiary"><span class="material-symbols-outlined" aria-hidden="true">verified</span></span>
+            <div><p class="text-sm font-bold text-on-surface">Verified diner</p><p class="text-xs text-on-surface-variant">Reviews follow your bookings</p></div>
+          </div>
+        </div>
+
+        <div class="mt-8 grid gap-4 sm:grid-cols-3">
+          <article class="rounded-2xl border border-surface-high bg-surface p-5 shadow-sm">
+            <div class="flex items-center justify-between"><p class="text-sm font-semibold text-on-surface-variant">Total reviews</p><span class="material-symbols-outlined text-primary" aria-hidden="true">rate_review</span></div>
+            <p id="metric-total" class="mt-4 font-display text-3xl font-extrabold text-on-surface">0</p>
+            <p class="mt-1 text-xs text-on-surface-variant">Reviews you have written</p>
+          </article>
+          <article class="rounded-2xl border border-surface-high bg-surface p-5 shadow-sm">
+            <div class="flex items-center justify-between"><p class="text-sm font-semibold text-on-surface-variant">Average rating</p><span class="material-symbols-outlined text-tertiary" aria-hidden="true">star</span></div>
+            <p class="mt-4 flex items-baseline gap-2"><span id="metric-average" class="font-display text-3xl font-extrabold text-on-surface">—</span><span class="text-xs text-on-surface-variant">out of 5</span></p>
+            <p class="mt-1 text-xs text-on-surface-variant">Across your reviews</p>
+          </article>
+          <article class="rounded-2xl border border-surface-high bg-surface p-5 shadow-sm">
+            <div class="flex items-center justify-between"><p class="text-sm font-semibold text-on-surface-variant">Places reviewed</p><span class="material-symbols-outlined text-primary" aria-hidden="true">restaurant</span></div>
+            <p id="metric-places" class="mt-4 font-display text-3xl font-extrabold text-on-surface">0</p>
+            <p class="mt-1 text-xs text-on-surface-variant">Different restaurants and cafes</p>
+          </article>
+        </div>
+      </section>
+
+      <section class="mt-9" aria-label="Your reviews">
+        <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div class="flex flex-wrap gap-2" role="group" aria-label="Filter reviews by place type">
+            <button class="review-filter rounded-full bg-primary px-4 py-2 text-sm font-bold text-on-primary" data-filter="all" type="button" aria-pressed="true">All Reviews <span class="ml-1" data-filter-count="all">0</span></button>
+            <button class="review-filter rounded-full bg-surface-low px-4 py-2 text-sm font-semibold text-on-surface-variant transition hover:bg-surface-high" data-filter="restaurant" type="button" aria-pressed="false">Restaurants <span class="ml-1" data-filter-count="restaurant">0</span></button>
+            <button class="review-filter rounded-full bg-surface-low px-4 py-2 text-sm font-semibold text-on-surface-variant transition hover:bg-surface-high" data-filter="cafe" type="button" aria-pressed="false">Cafes <span class="ml-1" data-filter-count="cafe">0</span></button>
+          </div>
+          <p class="flex items-center gap-1.5 text-xs font-medium text-on-surface-variant"><span class="material-symbols-outlined text-base" aria-hidden="true">schedule</span> Sorted by most recent</p>
+        </div>
+
+        <div id="reviews-container" class="mt-5 flex flex-col gap-4" aria-live="polite"></div>
+
+        <div id="reviews-empty" class="mt-5 hidden rounded-3xl border border-dashed border-surface-high bg-surface-low px-6 py-14 text-center">
+          <span class="mx-auto inline-flex h-16 w-16 items-center justify-center rounded-full bg-primary/10 text-primary"><span class="material-symbols-outlined text-3xl" aria-hidden="true">rate_review</span></span>
+          <h2 id="empty-title" class="mt-5 font-display text-xl font-bold text-on-surface">You have not written any reviews yet</h2>
+          <p id="empty-description" class="mx-auto mt-2 max-w-md text-sm leading-6 text-on-surface-variant">After you book a place, share your experience from its details page and your review will appear here.</p>
+          <a id="empty-action" class="mt-6 inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-bold text-on-primary transition hover:brightness-110" href="explore.html">Explore places <span class="material-symbols-outlined text-lg" aria-hidden="true">arrow_forward</span></a>
+        </div>
+      </section>
+    </main>
+
+    <div id="review-toast" class="pointer-events-none fixed inset-x-4 bottom-5 z-50 mx-auto flex max-w-lg translate-y-6 items-center gap-3 rounded-2xl bg-on-surface px-5 py-4 text-sm text-background opacity-0 shadow-2xl transition duration-300" role="status" aria-live="polite">
+      <span class="material-symbols-outlined text-lg text-primary" aria-hidden="true">check_circle</span><span id="review-toast-message">Review updated.</span>
+    </div>
+
+    <div id="edit-review-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-on-surface/40 p-4 backdrop-blur-sm" role="dialog" aria-modal="true" aria-labelledby="edit-modal-title" tabindex="-1">
+      <form id="edit-review-form" class="w-full max-w-lg rounded-3xl border border-surface-high bg-surface p-5 shadow-2xl sm:p-7">
+        <div class="flex items-start justify-between gap-4">
+          <div><p class="text-xs font-bold uppercase tracking-[0.14em] text-primary">Update your experience</p><h2 id="edit-modal-title" class="mt-2 font-display text-2xl font-extrabold text-on-surface">Edit review</h2><p id="edit-restaurant-name" class="mt-1 text-sm text-on-surface-variant"></p></div>
+          <button class="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-surface-low text-on-surface-variant transition hover:bg-surface-high" data-close-edit type="button" aria-label="Close edit review"><span class="material-symbols-outlined" aria-hidden="true">close</span></button>
+        </div>
+        <fieldset class="mt-6">
+          <legend class="text-sm font-bold text-on-surface">Your rating</legend>
+          <div id="edit-rating-stars" class="mt-2 flex items-center gap-1" role="group" aria-label="Choose a rating from one to five stars">
+            <button class="edit-rating-star text-3xl text-surface-highest transition hover:scale-110" data-rating="1" type="button" aria-label="1 star"><span class="material-symbols-outlined" aria-hidden="true">star</span></button>
+            <button class="edit-rating-star text-3xl text-surface-highest transition hover:scale-110" data-rating="2" type="button" aria-label="2 stars"><span class="material-symbols-outlined" aria-hidden="true">star</span></button>
+            <button class="edit-rating-star text-3xl text-surface-highest transition hover:scale-110" data-rating="3" type="button" aria-label="3 stars"><span class="material-symbols-outlined" aria-hidden="true">star</span></button>
+            <button class="edit-rating-star text-3xl text-surface-highest transition hover:scale-110" data-rating="4" type="button" aria-label="4 stars"><span class="material-symbols-outlined" aria-hidden="true">star</span></button>
+            <button class="edit-rating-star text-3xl text-surface-highest transition hover:scale-110" data-rating="5" type="button" aria-label="5 stars"><span class="material-symbols-outlined" aria-hidden="true">star</span></button>
+            <span id="edit-rating-value" class="ml-2 text-sm font-bold text-on-surface">0 / 5</span>
+          </div>
+          <p id="edit-rating-error" class="mt-1 hidden text-xs font-semibold text-red-700">Choose a rating from 1 to 5.</p>
+        </fieldset>
+        <div class="mt-5">
+          <div class="flex items-center justify-between gap-3"><label for="edit-review-comment" class="text-sm font-bold text-on-surface">Your review <span class="font-normal text-on-surface-variant">(optional)</span></label><span id="edit-char-count" class="text-xs text-on-surface-variant">0 / 500</span></div>
+          <textarea id="edit-review-comment" class="mt-2 min-h-32 w-full resize-y rounded-2xl border border-surface-high bg-surface-low p-4 text-sm leading-6 text-on-surface placeholder:text-on-surface-variant/70 focus:outline-none focus:ring-2 focus:ring-primary" maxlength="500" placeholder="Share what you enjoyed about the place..." rows="5"></textarea>
+        </div>
+        <div class="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+          <button class="min-h-11 rounded-full px-5 py-2.5 text-sm font-semibold text-on-surface-variant transition hover:bg-surface-low" data-close-edit type="button">Cancel</button>
+          <button class="min-h-11 rounded-full bg-primary px-6 py-2.5 text-sm font-bold text-on-primary transition hover:brightness-110" type="submit">Save changes</button>
+        </div>
+      </form>
+    </div>
+
+    <div id="delete-review-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-on-surface/40 p-4 backdrop-blur-sm" role="dialog" aria-modal="true" aria-labelledby="delete-modal-title" tabindex="-1">
+      <div class="w-full max-w-md rounded-3xl border border-surface-high bg-surface p-6 shadow-2xl">
+        <span class="inline-flex h-12 w-12 items-center justify-center rounded-full bg-red-100 text-red-700"><span class="material-symbols-outlined" aria-hidden="true">delete</span></span>
+        <h2 id="delete-modal-title" class="mt-4 font-display text-xl font-extrabold text-on-surface">Delete this review?</h2>
+        <p class="mt-2 text-sm leading-6 text-on-surface-variant">This review will be removed from your list. You can write a new one from the restaurant details page.</p>
+        <div class="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+          <button class="min-h-11 rounded-full px-5 py-2.5 text-sm font-semibold text-on-surface-variant transition hover:bg-surface-low" data-close-delete type="button">Keep review</button>
+          <button id="confirm-delete-review" class="min-h-11 rounded-full bg-red-700 px-5 py-2.5 text-sm font-bold text-white transition hover:bg-red-800" type="button">Delete review</button>
+        </div>
+      </div>
+    </div>
+
+    <footer id="site-footer" class="mt-auto border-t border-surface-high bg-surface-low"></footer>
+    <script type="module" src="/src/js/main.js"></script>
+  </body>
+</html>

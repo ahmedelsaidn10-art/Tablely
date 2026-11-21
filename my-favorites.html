@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#fff8f4" />
+    <meta name="description" content="View and manage your favorite restaurants and cafes on Tablely." />
+    <title>My Favorites | Tablely</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&family=Material+Symbols+Outlined:FILL@0..1&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/src/css/input.css" />
+    <script>
+      // Restore the selected theme before the page paints.
+      try {
+        const savedValue = localStorage.getItem('tablely-theme');
+        let savedTheme = savedValue;
+        try { savedTheme = JSON.parse(savedValue); } catch { /* Older values may be plain strings. */ }
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        if (savedTheme === 'dark' || (!savedTheme && prefersDark)) {
+          document.documentElement.classList.add('dark');
+        }
+      } catch {
+        // Keep the light theme if browser storage is unavailable.
+      }
+    </script>
+  </head>
+  <body class="overflow-x-hidden">
+    <header id="site-header"></header>
+
+    <main data-favorites-page class="page-shell min-h-[70vh] pb-16 pt-10 sm:pt-14">
+      <section aria-labelledby="favorites-title">
+        <div class="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <p class="text-xs font-bold uppercase tracking-[0.18em] text-primary">Your personal collection</p>
+            <h1 id="favorites-title" class="mt-2 font-display text-3xl font-extrabold tracking-tight text-on-surface sm:text-4xl">My Favorites</h1>
+            <p class="mt-2 max-w-2xl text-sm leading-6 text-on-surface-variant sm:text-base">All the restaurants and cafes you saved, together in one place.</p>
+          </div>
+          <div class="flex items-center gap-3">
+            <span id="saved-counter" class="rounded-full bg-surface-high px-4 py-2 text-sm font-bold text-on-surface" aria-live="polite">0 saved places</span>
+            <button id="share-favorites" class="inline-flex min-h-10 items-center gap-2 rounded-full border border-surface-high px-4 py-2 text-sm font-semibold text-on-surface transition hover:bg-surface-low" type="button">
+              <span class="material-symbols-outlined text-lg" aria-hidden="true">ios_share</span>Share
+            </button>
+          </div>
+        </div>
+
+        <div class="mt-8 flex flex-wrap gap-2" role="tablist" aria-label="Filter favorites by place type">
+          <button class="favorite-filter rounded-full bg-primary px-4 py-2 text-sm font-bold text-on-primary shadow-sm" type="button" role="tab" aria-selected="true" data-filter="all">
+            All <span class="ml-1 rounded-full bg-on-primary/20 px-2 py-0.5 text-xs" data-count="all">0</span>
+          </button>
+          <button class="favorite-filter rounded-full bg-surface-low px-4 py-2 text-sm font-semibold text-on-surface-variant transition hover:bg-surface-high" type="button" role="tab" aria-selected="false" data-filter="restaurant">
+            Restaurants <span class="ml-1 rounded-full bg-surface-high px-2 py-0.5 text-xs" data-count="restaurant">0</span>
+          </button>
+          <button class="favorite-filter rounded-full bg-surface-low px-4 py-2 text-sm font-semibold text-on-surface-variant transition hover:bg-surface-high" type="button" role="tab" aria-selected="false" data-filter="cafe">
+            Cafes <span class="ml-1 rounded-full bg-surface-high px-2 py-0.5 text-xs" data-count="cafe">0</span>
+          </button>
+        </div>
+
+        <div id="favorites-grid" class="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-3 lg:gap-6" aria-live="polite"></div>
+
+        <div id="favorites-empty" class="mt-8 hidden rounded-3xl border border-dashed border-surface-high bg-surface-low px-6 py-14 text-center">
+          <span class="mx-auto inline-flex h-16 w-16 items-center justify-center rounded-full bg-primary/10 text-primary">
+            <span class="material-symbols-outlined text-3xl" aria-hidden="true">favorite</span>
+          </span>
+          <h2 id="empty-title" class="mt-5 font-display text-xl font-bold text-on-surface">Your favorites list is empty</h2>
+          <p id="empty-description" class="mx-auto mt-2 max-w-md text-sm leading-6 text-on-surface-variant">Save places you love and they will show up here for later.</p>
+          <a class="mt-6 inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-bold text-on-primary transition hover:brightness-110" href="explore.html">
+            Explore places <span class="material-symbols-outlined text-lg" aria-hidden="true">arrow_forward</span>
+          </a>
+        </div>
+      </section>
+    </main>
+
+    <div id="favorites-toast" class="pointer-events-none fixed inset-x-4 bottom-5 z-50 mx-auto flex max-w-lg translate-y-6 items-center justify-between gap-4 rounded-2xl bg-on-surface px-5 py-4 text-sm text-background opacity-0 shadow-2xl transition duration-300" role="status" aria-live="polite">
+      <span id="toast-message">Place removed from favorites.</span>
+    </div>
+
+    <footer id="site-footer" class="mt-auto border-t border-surface-high bg-surface-low"></footer>
+    <script type="module" src="/src/js/main.js"></script>
+  </body>
+</html>

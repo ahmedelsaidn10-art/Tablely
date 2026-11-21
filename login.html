@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#fff8f4" />
+    <meta name="description" content="Sign in to your Tablely account to manage your reservations, favorites, and reviews." />
+    <title>Sign In | Tablely</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&family=Material+Symbols+Outlined:FILL@0..1&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/src/css/input.css" />
+    <script>
+      // Restore the selected theme before the page paints.
+      try {
+        const savedValue = localStorage.getItem('tablely-theme');
+        let savedTheme = savedValue;
+        try { savedTheme = JSON.parse(savedValue); } catch { /* Older values may be plain strings. */ }
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        if (savedTheme === 'dark' || (!savedTheme && prefersDark)) document.documentElement.classList.add('dark');
+      } catch {
+        // Keep the light theme if browser storage is unavailable.
+      }
+    </script>
+  </head>
+  <body class="overflow-x-hidden">
+    <header id="site-header"></header>
+
+    <main data-login-page class="page-shell flex min-h-[calc(100vh-8rem)] items-center py-8 sm:py-12">
+      <section class="grid w-full overflow-hidden rounded-3xl border border-surface-high bg-surface shadow-xl lg:min-h-[620px] lg:grid-cols-12" aria-labelledby="login-title">
+        <div class="flex items-center px-5 py-8 sm:px-9 sm:py-10 lg:col-span-7 lg:px-12">
+          <div class="mx-auto w-full max-w-lg">
+            <p class="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-3 py-1.5 text-xs font-bold uppercase tracking-[0.14em] text-primary">
+              <span class="h-1.5 w-1.5 rounded-full bg-primary" aria-hidden="true"></span> Guest &amp; diner access
+            </p>
+            <h1 id="login-title" class="mt-4 font-display text-3xl font-extrabold tracking-tight text-on-surface sm:text-4xl">Welcome back!</h1>
+            <p class="mt-3 text-sm leading-6 text-on-surface-variant sm:text-base">Sign in to manage your reservations, revisit your favorite places, and share your dining experiences.</p>
+
+            <div id="login-message" class="mt-6 hidden rounded-2xl border px-4 py-3 text-sm" role="status" aria-live="polite">
+              <p id="login-message-title" class="font-bold"></p>
+              <p id="login-message-description" class="mt-1 text-xs leading-5"></p>
+            </div>
+
+            <form id="login-form" class="mt-7 space-y-5" novalidate>
+              <div>
+                <label class="mb-2 block text-sm font-semibold text-on-surface" for="login-email">Email address <span class="text-primary" aria-hidden="true">*</span></label>
+                <div class="relative">
+                  <span class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5 text-on-surface-variant" aria-hidden="true">
+                    <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                      <rect x="3" y="5" width="18" height="14" rx="2"></rect>
+                      <path d="m3 7 9 6 9-6"></path>
+                    </svg>
+                  </span>
+                  <input id="login-email" class="min-h-12 w-full rounded-xl border border-surface-high bg-surface-low py-3 pl-11 pr-4 text-sm text-on-surface placeholder:text-on-surface-variant/70 focus:border-primary focus:bg-surface focus:outline-none focus:ring-2 focus:ring-primary/20" type="email" name="email" autocomplete="email" placeholder="Enter your email address" aria-describedby="login-email-error" required />
+                </div>
+                <p id="login-email-error" class="mt-1.5 hidden text-xs font-semibold text-red-700" aria-live="polite"></p>
+              </div>
+
+              <div>
+                <div class="mb-2 flex items-center justify-between gap-2">
+                  <label class="text-sm font-semibold text-on-surface" for="login-password">Password <span class="text-primary" aria-hidden="true">*</span></label>
+                </div>
+                <div class="relative">
+                  <span class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5 text-on-surface-variant" aria-hidden="true">
+                    <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                      <rect x="4" y="10" width="16" height="11" rx="2"></rect>
+                      <path d="M8 10V7a4 4 0 0 1 8 0v3"></path>
+                      <path d="M12 14v3"></path>
+                    </svg>
+                  </span>
+                  <input id="login-password" class="min-h-12 w-full rounded-xl border border-surface-high bg-surface-low py-3 pl-11 pr-12 text-sm text-on-surface placeholder:text-on-surface-variant/70 focus:border-primary focus:bg-surface focus:outline-none focus:ring-2 focus:ring-primary/20" type="password" name="password" autocomplete="current-password" placeholder="Enter your password" aria-describedby="login-password-error" required />
+                  <button id="toggle-password" class="absolute inset-y-0 right-2 inline-flex w-10 items-center justify-center rounded-lg text-on-surface-variant transition hover:bg-surface-high hover:text-on-surface" type="button" aria-label="Show password" aria-pressed="false">
+                    <span class="material-symbols-outlined" aria-hidden="true">visibility</span>
+                  </button>
+                </div>
+                <p id="login-password-error" class="mt-1.5 hidden text-xs font-semibold text-red-700" aria-live="polite"></p>
+              </div>
+
+              <label class="flex cursor-pointer items-center gap-2.5 text-sm text-on-surface-variant">
+                <input class="h-4 w-4 rounded border-surface-high text-primary focus:ring-primary/30" id="remember-me" name="rememberMe" type="checkbox" />
+                <span>Remember me on this device</span>
+              </label>
+
+              <button id="login-submit" class="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-primary px-6 py-3 font-display text-sm font-bold text-on-primary shadow-lg shadow-primary/20 transition hover:brightness-110 disabled:cursor-wait disabled:opacity-60 sm:text-base" type="submit">
+                <span>Sign in</span><span class="material-symbols-outlined text-lg" aria-hidden="true">arrow_forward</span>
+              </button>
+
+              <p class="pt-1 text-center text-sm text-on-surface-variant">Don't have an account? <a class="ml-1 font-bold text-primary transition hover:underline" href="register.html">Create account</a></p>
+            </form>
+          </div>
+        </div>
+
+        <div class="group relative min-h-72 overflow-hidden bg-dark-base sm:min-h-96 lg:col-span-5 lg:min-h-full">
+          <img class="absolute inset-0 h-full w-full object-cover transition duration-700 group-hover:scale-105" src="/images/restaurants/garden-bistro-interior-1.jpg" alt="Warm, plant-filled dining room at The Garden Bistro" loading="lazy" />
+          <div class="absolute inset-0 bg-linear-to-t from-black/85 via-black/25 to-black/10"></div>
+          <div class="absolute left-5 top-5 rounded-full border border-white/25 bg-black/25 px-3 py-1.5 text-xs font-bold uppercase tracking-wider text-white backdrop-blur sm:left-7 sm:top-7">Curated dining</div>
+          <div class="absolute inset-x-5 bottom-5 rounded-2xl border border-white/20 bg-black/35 p-5 text-white backdrop-blur-md sm:inset-x-7 sm:bottom-7 sm:p-6">
+            <div class="flex items-center gap-1 text-amber-300" aria-label="5 out of 5 stars">
+              <span class="material-symbols-outlined" aria-hidden="true">star</span><span class="material-symbols-outlined" aria-hidden="true">star</span><span class="material-symbols-outlined" aria-hidden="true">star</span><span class="material-symbols-outlined" aria-hidden="true">star</span><span class="material-symbols-outlined" aria-hidden="true">star</span>
+            </div>
+            <h2 class="mt-3 font-display text-xl font-extrabold sm:text-2xl">Make room for a memorable meal.</h2>
+            <p class="mt-2 text-sm leading-6 text-white/80">Find a place worth gathering around, then reserve your table in a few simple steps.</p>
+            <a class="mt-4 inline-flex items-center gap-1.5 text-sm font-bold text-white transition hover:gap-2.5" href="explore.html">Explore places <span class="material-symbols-outlined text-base" aria-hidden="true">arrow_forward</span></a>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer id="site-footer" class="mt-auto border-t border-surface-high bg-surface-low"></footer>
+    <script type="module" src="/src/js/main.js"></script>
+  </body>
+</html>

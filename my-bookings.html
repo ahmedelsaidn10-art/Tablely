@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#fff8f4" />
+    <meta name="description" content="Manage your upcoming and past Tablely restaurant reservations." />
+    <title>My Bookings | Tablely</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&family=Material+Symbols+Outlined:FILL@0..1&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/src/css/input.css" />
+    <script>
+      // Restore the saved theme before the page paints.
+      try {
+        const savedValue = localStorage.getItem('tablely-theme');
+        let savedTheme = savedValue;
+        try { savedTheme = JSON.parse(savedValue); } catch { /* Older values may be plain strings. */ }
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        if (savedTheme === 'dark' || (!savedTheme && prefersDark)) {
+          document.documentElement.classList.add('dark');
+        }
+      } catch {
+        // Keep the default light theme if browser storage is unavailable.
+      }
+    </script>
+  </head>
+  <body class="overflow-x-hidden">
+    <header id="site-header"></header>
+
+    <main data-my-bookings-page class="page-shell pb-16 pt-8 sm:pt-12">
+      <section aria-labelledby="bookings-title">
+        <div class="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <p class="text-xs font-bold uppercase tracking-[0.18em] text-primary">Your table plans</p>
+            <h1 id="bookings-title" class="mt-2 font-display text-3xl font-extrabold tracking-tight text-on-surface sm:text-4xl">My Bookings</h1>
+            <p class="mt-2 max-w-2xl text-sm leading-6 text-on-surface-variant sm:text-base">Keep your reservations organized and ready for your next great meal.</p>
+          </div>
+          <a class="inline-flex min-h-11 items-center justify-center gap-2 self-start rounded-full bg-primary px-5 py-2.5 text-sm font-bold text-on-primary transition hover:brightness-110 sm:self-auto" href="explore.html">
+            Find a table <span class="material-symbols-outlined text-lg" aria-hidden="true">arrow_forward</span>
+          </a>
+        </div>
+
+        <div class="mt-7 grid gap-4 sm:grid-cols-3">
+          <article class="flex items-center justify-between rounded-2xl border border-surface-high bg-surface p-5 shadow-sm sm:p-6">
+            <div>
+              <p class="text-xs font-bold uppercase tracking-wider text-primary">Total reservations</p>
+              <p id="metric-total" class="mt-1 font-display text-3xl font-extrabold text-on-surface">0</p>
+              <p class="mt-1 text-xs text-on-surface-variant">Upcoming and past bookings</p>
+            </div>
+            <span class="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10 text-primary"><span class="material-symbols-outlined text-2xl" aria-hidden="true">receipt_long</span></span>
+          </article>
+          <article class="flex items-center justify-between rounded-2xl border border-surface-high bg-surface p-5 shadow-sm sm:p-6">
+            <div>
+              <p class="text-xs font-bold uppercase tracking-wider text-primary">Upcoming reservations</p>
+              <p id="metric-upcoming" class="mt-1 font-display text-3xl font-extrabold text-on-surface">0</p>
+              <p class="mt-1 text-xs text-on-surface-variant">Tables waiting for you</p>
+            </div>
+            <span class="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10 text-primary"><span class="material-symbols-outlined text-2xl" aria-hidden="true">event_upcoming</span></span>
+          </article>
+          <article class="flex items-center justify-between rounded-2xl border border-surface-high bg-surface p-5 shadow-sm sm:p-6">
+            <div class="min-w-0">
+              <p class="text-xs font-bold uppercase tracking-wider text-primary">Next reservation</p>
+              <p id="next-reservation" class="mt-2 truncate font-display text-lg font-bold text-on-surface">No upcoming reservation</p>
+              <p id="next-reservation-time" class="mt-1 text-xs text-on-surface-variant">Your next table will appear here</p>
+            </div>
+            <span class="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary"><span class="material-symbols-outlined text-2xl" aria-hidden="true">calendar_month</span></span>
+          </article>
+        </div>
+
+        <div class="mt-9 flex flex-col gap-4 border-b border-surface-high pb-4 sm:flex-row sm:items-center sm:justify-between">
+          <div class="flex flex-wrap gap-2" role="tablist" aria-label="Filter bookings">
+            <button class="booking-filter rounded-full bg-primary px-4 py-2 text-sm font-bold text-on-primary shadow-sm" type="button" role="tab" aria-selected="true" data-filter="all">All <span class="ml-1 text-xs" data-filter-count="all">0</span></button>
+            <button class="booking-filter rounded-full bg-surface-low px-4 py-2 text-sm font-semibold text-on-surface-variant transition hover:bg-surface-high" type="button" role="tab" aria-selected="false" data-filter="upcoming">Upcoming <span class="ml-1 text-xs" data-filter-count="upcoming">0</span></button>
+          </div>
+          <p id="booking-count-label" class="text-sm font-semibold text-on-surface-variant" aria-live="polite">0 bookings</p>
+        </div>
+
+        <div id="bookings-list" class="mt-5 grid gap-5" aria-live="polite"></div>
+
+        <div id="bookings-empty" class="mt-6 hidden rounded-3xl border border-dashed border-surface-high bg-surface-low px-6 py-14 text-center">
+          <span class="mx-auto inline-flex h-16 w-16 items-center justify-center rounded-full bg-primary/10 text-primary"><span class="material-symbols-outlined text-3xl" aria-hidden="true">event_seat</span></span>
+          <h2 id="empty-title" class="mt-5 font-display text-xl font-bold text-on-surface">No upcoming bookings</h2>
+          <p id="empty-description" class="mx-auto mt-2 max-w-md text-sm leading-6 text-on-surface-variant">Find a place you love and reserve your next table in a few simple steps.</p>
+          <a class="mt-6 inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-bold text-on-primary transition hover:brightness-110" href="explore.html">Explore places <span class="material-symbols-outlined text-lg" aria-hidden="true">arrow_forward</span></a>
+        </div>
+      </section>
+    </main>
+
+    <div id="cancel-booking-modal" class="fixed inset-0 z-[60] hidden items-center justify-center bg-black/50 p-4" role="dialog" aria-modal="true" aria-labelledby="cancel-modal-title">
+      <div class="w-full max-w-md rounded-3xl border border-surface-high bg-surface p-6 shadow-2xl sm:p-8">
+        <span class="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-red-100 text-red-700"><span class="material-symbols-outlined text-2xl" aria-hidden="true">warning</span></span>
+        <h2 id="cancel-modal-title" class="mt-5 font-display text-2xl font-bold text-on-surface">Cancel your reservation?</h2>
+        <p class="mt-2 text-sm leading-6 text-on-surface-variant">Are you sure you want to cancel your booking at <strong id="cancel-restaurant-name" class="text-on-surface"></strong> on <strong id="cancel-booking-date" class="text-on-surface"></strong>? It will be removed from your bookings.</p>
+        <div class="mt-6 flex justify-end gap-3">
+          <button class="min-h-11 rounded-full border border-surface-high px-5 py-2.5 text-sm font-bold text-on-surface-variant transition hover:bg-surface-low" type="button" data-dismiss-cancel>Keep booking</button>
+          <button id="confirm-cancel-booking" class="min-h-11 rounded-full bg-red-700 px-5 py-2.5 text-sm font-bold text-white transition hover:bg-red-800" type="button">Cancel reservation</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="bookings-toast" class="pointer-events-none fixed inset-x-4 bottom-5 z-[70] mx-auto max-w-lg translate-y-6 rounded-2xl bg-on-surface px-5 py-4 text-sm text-background opacity-0 shadow-2xl transition duration-300" role="status" aria-live="polite"></div>
+
+    <footer id="site-footer" class="mt-auto border-t border-surface-high bg-surface-low"></footer>
+    <script type="module" src="/src/js/main.js"></script>
+  </body>
+</html>

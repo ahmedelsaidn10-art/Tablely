@@ -1,0 +1,18 @@
+.page-shell {
+  width: min(100% - 2.5rem, 1200px);
+  margin-inline: auto;
+}
+
+.section-space {
+  margin-block: clamp(3.5rem, 8vw, 6.5rem);
+}
+
+.text-balance {
+  text-wrap: balance;
+}
+
+@media (min-width: 768px) {
+  .page-shell {
+    width: min(100% - 4rem, 1200px);
+  }
+}

@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#fff8f4" />
+    <meta name="description" content="Explore restaurants and cafes, compare ratings, and find your next favorite place on Tablely." />
+    <title>Explore Restaurants &amp; Cafes | Tablely</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&family=Material+Symbols+Outlined:FILL@0..1&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/src/css/input.css" />
+    <script>
+      // Restore the selected theme before the page paints.
+      try {
+        const savedValue = localStorage.getItem('tablely-theme');
+        let savedTheme = savedValue;
+        try { savedTheme = JSON.parse(savedValue); } catch { /* Older values may be plain strings. */ }
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        if (savedTheme === 'dark' || (!savedTheme && prefersDark)) document.documentElement.classList.add('dark');
+      } catch {
+        // Keep the light theme if browser storage is unavailable.
+      }
+    </script>
+  </head>
+  <body class="overflow-x-hidden">
+    <header id="site-header"></header>
+
+    <main data-explore-page class="page-shell min-h-[70vh] pb-16 pt-10 sm:pt-14">
+      <section class="mx-auto mb-9 max-w-3xl text-center sm:mb-12" aria-labelledby="explore-title">
+        <p class="inline-flex items-center gap-2 rounded-full border border-surface-high bg-surface-low px-3.5 py-1.5 text-xs font-bold uppercase tracking-[0.16em] text-primary">
+          <span class="material-symbols-outlined text-base" aria-hidden="true">explore</span> Curated gastronomy
+        </p>
+        <h1 id="explore-title" class="mt-4 font-display text-3xl font-extrabold tracking-tight text-on-surface sm:text-4xl lg:text-5xl">
+          Explore <span class="font-serif font-normal italic text-primary">Restaurants &amp; Cafes</span>
+        </h1>
+        <p class="mx-auto mt-4 max-w-2xl text-sm leading-6 text-on-surface-variant sm:text-base">Discover new places, compare dining experiences, and find the right spot for your next visit.</p>
+      </section>
+
+      <section class="mb-8 rounded-3xl border border-surface-high bg-surface p-5 shadow-sm sm:p-7" aria-label="Search and filter places">
+        <form id="explore-search-form" role="search">
+          <label class="sr-only" for="explore-search">Search places</label>
+          <div class="flex flex-col gap-2 rounded-2xl border border-surface-high bg-background p-1.5 focus-within:ring-2 focus-within:ring-primary sm:flex-row sm:items-center sm:rounded-full">
+            <div class="flex min-h-12 flex-1 items-center gap-3 px-3 sm:px-4">
+              <span class="material-symbols-outlined text-xl text-primary" aria-hidden="true">search</span>
+              <input id="explore-search" name="q" type="search" class="w-full bg-transparent text-sm text-on-surface placeholder:text-on-surface-variant/70 focus:outline-none sm:text-base" placeholder="Search by name, cuisine, or location..." />
+            </div>
+            <button class="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-primary px-6 py-2.5 text-sm font-bold text-on-primary transition hover:brightness-110 sm:rounded-full" type="submit">
+              <span class="material-symbols-outlined text-lg" aria-hidden="true">search</span> Search
+            </button>
+          </div>
+        </form>
+
+        <div class="mt-5 border-t border-surface-high pt-5">
+          <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            <div>
+              <label class="mb-2 flex items-center gap-1.5 text-xs font-bold text-on-surface-variant" for="filter-type"><span class="material-symbols-outlined text-base text-primary" aria-hidden="true">storefront</span> Place type</label>
+              <select id="filter-type" class="min-h-11 w-full rounded-xl border border-surface-high bg-background px-3.5 text-sm font-medium text-on-surface focus:outline-none focus:ring-2 focus:ring-primary">
+                <option value="all">All places</option><option value="restaurant">Restaurants</option><option value="cafe">Cafes</option>
+              </select>
+            </div>
+            <div>
+              <label class="mb-2 flex items-center gap-1.5 text-xs font-bold text-on-surface-variant" for="filter-location"><span class="material-symbols-outlined text-base text-primary" aria-hidden="true">location_on</span> Location</label>
+              <select id="filter-location" class="min-h-11 w-full rounded-xl border border-surface-high bg-background px-3.5 text-sm font-medium text-on-surface focus:outline-none focus:ring-2 focus:ring-primary">
+                <option value="all">All locations</option>
+              </select>
+            </div>
+            <div>
+              <label class="mb-2 flex items-center gap-1.5 text-xs font-bold text-on-surface-variant" for="filter-rating"><span class="material-symbols-outlined text-base text-primary" aria-hidden="true">star</span> Minimum rating</label>
+              <select id="filter-rating" class="min-h-11 w-full rounded-xl border border-surface-high bg-background px-3.5 text-sm font-medium text-on-surface focus:outline-none focus:ring-2 focus:ring-primary">
+                <option value="0">All ratings</option><option value="4">4+ stars</option><option value="3">3+ stars</option><option value="2">2+ stars</option>
+              </select>
+            </div>
+          </div>
+          <div class="mt-4 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+            <button id="clear-filters-btn" class="min-h-10 rounded-xl border border-surface-high px-4 py-2 text-sm font-semibold text-on-surface-variant transition hover:bg-surface-low" type="button">Clear all</button>
+            <button id="apply-filters-btn" class="min-h-10 rounded-xl bg-primary px-5 py-2 text-sm font-bold text-on-primary transition hover:brightness-110" type="button">Apply filters</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="mb-5 flex flex-col gap-3 border-b border-surface-high pb-4 sm:flex-row sm:items-center sm:justify-between" aria-label="Explore results controls">
+        <div class="flex items-center gap-2">
+          <h2 id="results-count" class="font-display text-lg font-bold text-on-surface sm:text-xl" aria-live="polite">Places</h2>
+          <span class="h-2 w-2 rounded-full bg-emerald-500" aria-hidden="true"></span>
+        </div>
+        <div class="flex items-center gap-3 self-start sm:self-auto">
+          <label class="text-sm font-medium text-on-surface-variant" for="sort-select">Sort by</label>
+          <select id="sort-select" class="min-h-10 min-w-40 rounded-xl border border-surface-high bg-surface px-3.5 text-sm font-semibold text-on-surface focus:outline-none focus:ring-2 focus:ring-primary">
+            <option value="highest">Highest rated</option><option value="lowest">Lowest rated</option><option value="reviews">Most reviewed</option>
+          </select>
+        </div>
+      </section>
+
+      <section id="places-grid" class="mb-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3 lg:gap-6" aria-label="Restaurants and cafes" aria-live="polite"></section>
+
+      <section id="explore-empty" class="hidden rounded-3xl border border-dashed border-surface-high bg-surface-low px-6 py-14 text-center">
+        <span class="mx-auto inline-flex h-16 w-16 items-center justify-center rounded-full bg-primary/10 text-primary"><span class="material-symbols-outlined text-3xl" aria-hidden="true">search_off</span></span>
+        <h2 class="mt-5 font-display text-xl font-bold text-on-surface">No places found</h2>
+        <p class="mx-auto mt-2 max-w-md text-sm leading-6 text-on-surface-variant">Try a different search or clear your filters to see all available places.</p>
+        <button id="empty-clear-btn" class="mt-6 inline-flex min-h-11 items-center justify-center rounded-full bg-primary px-5 py-2.5 text-sm font-bold text-on-primary transition hover:brightness-110" type="button">Clear search and filters</button>
+      </section>
+
+      <nav id="explore-pagination" class="flex items-center justify-center gap-2 border-t border-surface-high pt-6" aria-label="Explore pages"></nav>
+    </main>
+
+    <div id="explore-toast" class="pointer-events-none fixed inset-x-4 bottom-5 z-50 mx-auto flex max-w-lg translate-y-6 items-center gap-3 rounded-2xl bg-on-surface px-5 py-4 text-sm text-background opacity-0 shadow-2xl transition duration-300" role="status" aria-live="polite">
+      <span class="material-symbols-outlined text-lg text-primary" aria-hidden="true">favorite</span><span id="explore-toast-message">Place saved.</span>
+    </div>
+
+    <footer id="site-footer" class="mt-auto border-t border-surface-high bg-surface-low"></footer>
+    <script type="module" src="/src/js/main.js"></script>
+  </body>
+</html>
