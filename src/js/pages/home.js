@@ -49,10 +49,8 @@ function connectHomeSearch() {
     event.preventDefault();
     const formData = new FormData(form);
     const query = String(formData.get('query') || '').trim();
-    const location = String(formData.get('location') || '').trim();
     const params = new URLSearchParams();
     if (query) params.set('q', query);
-    if (location) params.set('location', location);
     window.location.href = `explore.html${params.size ? `?${params}` : ''}`;
   });
 }

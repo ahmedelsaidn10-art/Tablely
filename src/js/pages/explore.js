@@ -8,7 +8,6 @@ const page = document.querySelector('[data-explore-page]');
 const searchForm = document.querySelector('#explore-search-form');
 const searchInput = document.querySelector('#explore-search');
 const typeFilter = document.querySelector('#filter-type');
-const locationFilter = document.querySelector('#filter-location');
 const ratingFilter = document.querySelector('#filter-rating');
 const sortSelect = document.querySelector('#sort-select');
 const grid = document.querySelector('#places-grid');
@@ -28,7 +27,6 @@ function filtersFromControls() {
   return {
     q: searchInput.value.trim(),
     type: typeFilter.value === 'all' ? '' : typeFilter.value,
-    location: locationFilter.value.trim() === 'all' ? '' : locationFilter.value.trim(),
     minRating: Number(ratingFilter.value) || '',
     sort: sortSelect.value,
     category: activeCategory,
@@ -96,14 +94,6 @@ function readUrlFilters() {
     ? params.get('category')
     : '';
   if (params.get('category') === 'fast-food') searchInput.value = 'fast food';
-  const location = params.get('location');
-  if (location) {
-    const option = document.createElement('option');
-    option.value = location;
-    option.textContent = location;
-    locationFilter.append(option);
-    locationFilter.value = location;
-  }
 }
 
 function updateUrl() {
@@ -112,7 +102,6 @@ function updateUrl() {
   if (filters.q) params.set('q', filters.q);
   if (filters.type) params.set('type', filters.type);
   if (filters.category) params.set('category', filters.category);
-  if (filters.location) params.set('location', filters.location);
   if (filters.minRating) params.set('minRating', String(filters.minRating));
   if (filters.sort !== 'highest') params.set('sort', filters.sort);
   window.history.replaceState(null, '', `${window.location.pathname}${params.size ? `?${params}` : ''}`);
@@ -127,7 +116,6 @@ function applyFilters() {
 function clearFilters() {
   searchInput.value = '';
   typeFilter.value = 'all';
-  locationFilter.value = 'all';
   ratingFilter.value = '0';
   activeCategory = '';
   sortSelect.value = 'highest';
