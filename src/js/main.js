@@ -13,6 +13,8 @@ import { getCurrentUser, loadCurrentUser } from './services/auth.service.js';
 import { STORAGE_KEYS } from './config/constants.js';
 import { getStoredValue } from './utils/storage.js';
 import { requireVerifiedUser } from './utils/favorite-access.js';
+import { initMotion } from './utils/motion.js';
+import { applySavedLanguagePreference, initLanguage } from './utils/i18n.js';
 
 // Restore the saved theme before adding shared page components.
 function initializeTheme() {
@@ -36,13 +38,16 @@ function initializeProtectedPage(selector, initializePage, accessCheck = () => B
 }
 
 async function startApp() {
+  initializeTheme();
+  // Translate the page before waiting for the authentication request.
+  applySavedLanguagePreference();
+  initLanguage();
   try {
     await loadCurrentUser();
   } catch {
     authLoadFailed = true;
   }
 
-  initializeTheme();
   renderNavbar(document.querySelector('#site-header'));
   renderFooter(document.querySelector('#site-footer'));
 
@@ -55,6 +60,7 @@ async function startApp() {
   if (document.querySelector('[data-login-page]')) initLoginPage();
   if (document.querySelector('[data-register-page]')) initRegisterPage();
   if (document.querySelector('[data-verify-email-page]')) initVerifyEmailPage();
+  initMotion();
 }
 
 startApp();

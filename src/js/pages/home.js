@@ -4,6 +4,7 @@ import { loadFavorites, toggleFavorite } from '../services/favorites.service.js'
 import { getCurrentUser } from '../services/auth.service.js';
 import { escapeHTML } from '../utils/helpers.js';
 import { canUseFavorites } from '../utils/favorite-access.js';
+import { translateUiText } from '../utils/i18n.js';
 
 const categories = [
   { name: 'Restaurants', note: 'Find open tables', image: '/images/restaurants/category-restaurants.jpg', key: 'restaurant' },
@@ -75,7 +76,7 @@ async function renderFeaturedRestaurants() {
       button.setAttribute('aria-pressed', String(isSaved));
       button.setAttribute('aria-label', `${isSaved ? 'Remove from' : 'Add to'} favorites`);
     } catch (error) {
-      window.alert(error.message || 'Could not update favorites.');
+      window.alert(translateUiText(error.message || 'Could not update favorites.'));
     } finally {
       button.disabled = false;
     }

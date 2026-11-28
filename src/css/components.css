@@ -118,11 +118,221 @@ img {
   transition: color 160ms ease;
 }
 
+/* Page and content entrance */
+@keyframes motion-page-enter {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes motion-pop-in {
+  0% { opacity: 0; transform: scale(0.92) translateY(8px); }
+  70% { transform: scale(1.015) translateY(-1px); }
+  100% { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+@keyframes motion-heart-pop {
+  0% { transform: scale(1); }
+  45% { transform: scale(1.35); }
+  100% { transform: scale(1); }
+}
+
+.motion-page-enter {
+  animation: motion-page-enter 520ms cubic-bezier(.2, .7, .25, 1) both;
+}
+
+.motion-enabled .motion-reveal {
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity 650ms ease, transform 650ms cubic-bezier(.2, .7, .25, 1);
+  transition-delay: var(--motion-delay, 0ms);
+  will-change: opacity, transform;
+}
+
+.motion-enabled .motion-reveal.motion-visible {
+  opacity: 1;
+  transform: translateY(0);
+  will-change: auto;
+}
+
+/* Interactive cards and controls */
+.restaurant-card,
+.booking-card,
+.review-card,
+#menu-items > article,
+#reviews-list > article,
+#reviews-container > article {
+  transition: transform 260ms ease, box-shadow 260ms ease, border-color 260ms ease;
+}
+
+.restaurant-card:hover,
+.booking-card:hover,
+.review-card:hover,
+#menu-items > article:hover,
+#reviews-list > article:hover,
+#reviews-container > article:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 18px 38px rgb(20 35 24 / 12%);
+}
+
+.restaurant-card-image {
+  transition: transform 650ms cubic-bezier(.2, .7, .25, 1);
+}
+
+button:not(:disabled),
+a[href] {
+  transition: color 180ms ease, background-color 180ms ease, border-color 180ms ease,
+    box-shadow 180ms ease, transform 180ms ease;
+}
+
+button:not(:disabled):active,
+a[href]:active {
+  transform: scale(0.97);
+}
+
+.favorite-button[aria-pressed="true"] .material-symbols-outlined {
+  animation: motion-heart-pop 360ms ease;
+}
+
+/* Shared overlays and the mobile menu */
+[role="dialog"]:not(.hidden) > div {
+  animation: motion-pop-in 300ms cubic-bezier(.2, .7, .25, 1) both;
+}
+
+#mobile-menu:not(.hidden) {
+  transform-origin: top;
+  animation: motion-pop-in 220ms ease both;
+}
+
+[role="status"].opacity-100 {
+  animation: motion-pop-in 240ms ease both;
+}
+
+/* Cinematic reveal, slow camera movement, and a passing light sweep on the home image. */
+@keyframes motion-home-photo {
+  from { opacity: 0.2; filter: blur(14px) saturate(.75) brightness(.8); }
+  to { opacity: 1; filter: blur(0) saturate(1.08) brightness(1); }
+}
+
+@keyframes motion-home-card-flip {
+  0% {
+    opacity: 0;
+    transform: perspective(1400px) rotateY(-88deg) rotateX(12deg) scale(.84) translateY(18px);
+  }
+  62% {
+    opacity: 1;
+    transform: perspective(1400px) rotateY(12deg) rotateX(-3deg) scale(1.035) translateY(-4px);
+  }
+  82% {
+    transform: perspective(1400px) rotateY(-5deg) rotateX(1deg) scale(.995);
+  }
+  100% {
+    opacity: 1;
+    transform: perspective(1400px) rotateY(0) rotateX(0) scale(1) translateY(0);
+  }
+}
+
+@keyframes motion-home-light-sweep {
+  0%, 12% { transform: translateX(-140%) rotate(8deg); opacity: 0; }
+  48% { opacity: .8; }
+  100% { transform: translateX(140%) rotate(8deg); opacity: 0; }
+}
+
+.motion-enabled .home-hero-card {
+  transform-origin: center;
+  animation: motion-home-card-flip 1450ms 120ms cubic-bezier(.2, .8, .25, 1) both;
+  will-change: transform, opacity;
+}
+
+/* Restaurant and cafe cards flip once as they enter the viewport. */
+.motion-enabled .restaurant-card.motion-visible {
+  transform-origin: center;
+  animation: motion-home-card-flip 1150ms cubic-bezier(.2, .8, .25, 1) var(--motion-delay, 0ms) 1;
+}
+
+.motion-enabled .home-hero-image {
+  animation: motion-home-photo 1000ms 100ms cubic-bezier(.2, .7, .25, 1) both;
+}
+
+.motion-enabled .home-hero-motion::after {
+  position: absolute;
+  inset: -35% -20%;
+  z-index: 1;
+  background: linear-gradient(105deg, transparent 40%, rgb(255 255 255 / 26%) 50%, transparent 60%);
+  content: "";
+  pointer-events: none;
+  animation: motion-home-light-sweep 1400ms 500ms ease-in-out both;
+}
+
+.motion-enabled .group:hover .home-hero-image {
+  filter: saturate(1.15) brightness(1.06);
+}
+
+/* Arabic layout refinements for the shared pages and form controls. */
+html[dir="rtl"] .text-left {
+  text-align: right;
+}
+
+html[dir="rtl"] .text-right {
+  text-align: left;
+}
+
+html[dir="rtl"] .left-3 {
+  right: 0.75rem;
+  left: auto;
+}
+
+html[dir="rtl"] .left-4 {
+  right: 1rem;
+  left: auto;
+}
+
+html[dir="rtl"] .right-3 {
+  right: auto;
+  left: 0.75rem;
+}
+
+html[dir="rtl"] .right-4 {
+  right: auto;
+  left: 1rem;
+}
+
+html[dir="rtl"] .ml-1 {
+  margin-right: 0.25rem;
+  margin-left: 0;
+}
+
+html[dir="rtl"] .rtl-directional-icon {
+  transform: scaleX(-1);
+}
+
+html[lang="ar"] body,
+html[lang="ar"] .font-display {
+  font-family: Tahoma, Arial, sans-serif;
+}
+
+html[lang="ar"] input[type="email"],
+html[lang="ar"] input[type="password"],
+html[lang="ar"] input[type="url"],
+html[lang="ar"] input[type="tel"],
+html[lang="ar"] input[type="date"],
+html[lang="ar"] input[type="time"] {
+  direction: ltr;
+  text-align: left;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
   *::after {
     scroll-behavior: auto !important;
     transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-delay: 0ms !important;
+  }
+
+  .motion-enabled .motion-reveal {
+    opacity: 1 !important;
+    transform: none !important;
   }
 }
