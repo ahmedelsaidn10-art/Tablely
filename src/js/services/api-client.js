@@ -11,6 +11,17 @@ export class ApiError extends Error {
   }
 }
 
+let csrfToken = '';
+
+// Keep the API's CSRF token in memory because production cookies belong to another origin.
+export function setCsrfToken(token) {
+  csrfToken = typeof token === 'string' ? token : '';
+}
+
+export function clearCsrfToken() {
+  csrfToken = '';
+}
+
 function readCookie(name) {
   const prefix = `${encodeURIComponent(name)}=`;
   const cookie = document.cookie.split('; ').find((item) => item.startsWith(prefix));
@@ -34,8 +45,8 @@ export async function apiRequest(path, options = {}) {
   }
 
   if (['POST', 'PUT', 'PATCH', 'DELETE'].includes(method)) {
-    const csrfToken = readCookie('csrf_access_token');
-    if (csrfToken) headers.set('X-CSRF-TOKEN', csrfToken);
+    const token = csrfToken || readCookie('csrf_access_token');
+    if (token) headers.set('X-CSRF-TOKEN', token);
   }
 
   let response;

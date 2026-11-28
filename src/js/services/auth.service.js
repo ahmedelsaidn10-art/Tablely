@@ -1,4 +1,4 @@
-import { ApiError, apiGet, apiPost } from './api-client.js';
+import { ApiError, apiGet, apiPost, clearCsrfToken, setCsrfToken } from './api-client.js';
 
 let currentUser = null;
 
@@ -17,6 +17,7 @@ function errorResult(error) {
 
 function updateUser(envelope) {
   currentUser = envelope?.data?.user || null;
+  setCsrfToken(envelope?.data?.csrfToken);
   return currentUser;
 }
 
@@ -65,6 +66,7 @@ export async function loadCurrentUser() {
     return updateUser(await apiGet('auth/me'));
   } catch (error) {
     currentUser = null;
+    clearCsrfToken();
     if (error instanceof ApiError && error.status === 401) return null;
     throw error;
   }
@@ -79,5 +81,6 @@ export async function logoutUser() {
     await apiPost('auth/logout');
   } finally {
     currentUser = null;
+    clearCsrfToken();
   }
 }
