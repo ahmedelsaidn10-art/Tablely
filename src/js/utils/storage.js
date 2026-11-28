@@ -1,4 +1,4 @@
-﻿// Keep browser storage calls in one place so the app can switch to an API later.
+// Keep local storage calls in one place for settings that stay in the browser.
 export function getStoredValue(key, fallback = null) {
   try {
     const value = localStorage.getItem(key);
@@ -21,13 +21,5 @@ export function setStoredValue(key, value) {
     return true;
   } catch {
     return false;
-  }
-}
-
-export function removeStoredValue(key) {
-  try {
-    localStorage.removeItem(key);
-  } catch {
-    // Storage may be unavailable in private or restricted browser contexts.
   }
 }
