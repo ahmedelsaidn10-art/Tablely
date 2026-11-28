@@ -51,12 +51,12 @@
           <article class="rounded-2xl border border-surface-high bg-surface p-5 shadow-sm">
             <div class="flex items-center justify-between"><p class="text-sm font-semibold text-on-surface-variant">Average rating</p><span class="material-symbols-outlined text-tertiary" aria-hidden="true">star</span></div>
             <p class="mt-4 flex items-baseline gap-2"><span id="metric-average" class="font-display text-3xl font-extrabold text-on-surface">—</span><span class="text-xs text-on-surface-variant">out of 5</span></p>
-            <p class="mt-1 text-xs text-on-surface-variant">Across your reviews</p>
+            <p class="mt-1 text-xs text-on-surface-variant">Average on this page</p>
           </article>
           <article class="rounded-2xl border border-surface-high bg-surface p-5 shadow-sm">
             <div class="flex items-center justify-between"><p class="text-sm font-semibold text-on-surface-variant">Places reviewed</p><span class="material-symbols-outlined text-primary" aria-hidden="true">restaurant</span></div>
             <p id="metric-places" class="mt-4 font-display text-3xl font-extrabold text-on-surface">0</p>
-            <p class="mt-1 text-xs text-on-surface-variant">Different restaurants and cafes</p>
+            <p class="mt-1 text-xs text-on-surface-variant">On this page</p>
           </article>
         </div>
       </section>
@@ -72,6 +72,7 @@
         </div>
 
         <div id="reviews-container" class="mt-5 flex flex-col gap-4" aria-live="polite"></div>
+        <nav id="my-reviews-pagination" class="mt-6 flex flex-wrap items-center justify-center gap-2" aria-label="My review pages"></nav>
 
         <div id="reviews-empty" class="mt-5 hidden rounded-3xl border border-dashed border-surface-high bg-surface-low px-6 py-14 text-center">
           <span class="mx-auto inline-flex h-16 w-16 items-center justify-center rounded-full bg-primary/10 text-primary"><span class="material-symbols-outlined text-3xl" aria-hidden="true">rate_review</span></span>

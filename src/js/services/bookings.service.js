@@ -1,41 +1,27 @@
-import { STORAGE_KEYS } from '../config/constants.js';
-import { bookings as initialBookings } from '../data/bookings.data.js';
-import { getStoredValue, setStoredValue } from '../utils/storage.js';
+import { apiDelete, apiGet, apiPost } from './api-client.js';
 
-export function getBookings() {
-  const savedBookings = getStoredValue(STORAGE_KEYS.bookings, initialBookings);
-  if (!Array.isArray(savedBookings)) return [];
-
-  // Remove old cancelled entries left by the previous status-based behavior.
-  const activeBookings = savedBookings.filter((booking) => booking.status !== 'cancelled');
-  if (activeBookings.length !== savedBookings.length) {
-    setStoredValue(STORAGE_KEYS.bookings, activeBookings);
-  }
-  return activeBookings;
+export async function getBookings() {
+  const response = await apiGet('bookings');
+  return response?.data?.items || [];
 }
 
-export function createBooking(bookingDetails) {
-  const booking = {
-    ...bookingDetails,
-    id: globalThis.crypto?.randomUUID?.() || `booking-${Date.now()}`,
-    status: 'confirmed',
-    createdAt: new Date().toISOString(),
-  };
-  const saved = setStoredValue(STORAGE_KEYS.bookings, [...getBookings(), booking]);
-  return saved ? booking : null;
+export async function createBooking(details) {
+  const response = await apiPost('bookings', {
+    restaurantId: Number(details.restaurantId),
+    date: details.date,
+    time: details.time,
+    guests: Number(details.guests),
+    ...(details.specialRequests ? { specialRequests: details.specialRequests } : {}),
+  });
+  return response?.data?.booking || null;
 }
 
-export function cancelBooking(bookingId) {
-  const currentBookings = getBookings();
-  const nextBookings = currentBookings.filter((booking) => booking.id !== bookingId);
-  if (nextBookings.length === currentBookings.length) return false;
-  return setStoredValue(STORAGE_KEYS.bookings, nextBookings);
+export async function cancelBooking(bookingId) {
+  const response = await apiDelete(`bookings/${encodeURIComponent(bookingId)}`);
+  return response?.success === true;
 }
 
-// Any confirmed non-cancelled booking makes the guest eligible to review.
-export function hasBookingForRestaurant(restaurantId) {
-  return getBookings().some((booking) => (
-    booking.restaurantId === restaurantId
-    && booking.status !== 'cancelled'
-  ));
+export async function hasBookingForRestaurant(restaurantId) {
+  const bookings = await getBookings();
+  return bookings.some((booking) => Number(booking.restaurantId) === Number(restaurantId));
 }

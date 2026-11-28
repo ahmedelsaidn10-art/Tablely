@@ -12,6 +12,7 @@ export default defineConfig({
         restaurantDetails: 'restaurant-details.html',
         login: 'login.html',
         register: 'register.html',
+        verifyEmail: 'verify-email.html',
         myBookings: 'my-bookings.html',
         myFavorites: 'my-favorites.html',
         myReviews: 'my-reviews.html',

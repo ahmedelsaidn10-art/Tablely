@@ -1,7 +1,9 @@
 import { createRestaurantCard } from '../components/restaurant-card.js';
 import { getFeaturedRestaurants } from '../services/restaurants.service.js';
-import { toggleFavorite } from '../services/favorites.service.js';
+import { loadFavorites, toggleFavorite } from '../services/favorites.service.js';
+import { getCurrentUser } from '../services/auth.service.js';
 import { escapeHTML } from '../utils/helpers.js';
+import { canUseFavorites } from '../utils/favorite-access.js';
 
 const categories = [
   { name: 'Restaurants', note: 'Find open tables', image: '/images/restaurants/category-restaurants.jpg', key: 'restaurant' },
@@ -58,17 +60,25 @@ async function renderFeaturedRestaurants() {
   const container = document.querySelector('#featured-restaurants');
   if (!container) return;
 
-  const places = await getFeaturedRestaurants();
+  const places = await getFeaturedRestaurants(3);
   // Keep the home page focused on a small selection; Explore shows the full list.
-  container.innerHTML = places.slice(0, 3).map(createRestaurantCard).join('');
+  container.innerHTML = places.map(createRestaurantCard).join('');
 
-  container.addEventListener('click', (event) => {
+  container.addEventListener('click', async (event) => {
     const button = event.target.closest('[data-favorite-id]');
     if (!button) return;
+    if (!canUseFavorites()) return;
 
-    const isSaved = toggleFavorite(button.dataset.favoriteId);
-    button.setAttribute('aria-pressed', String(isSaved));
-    button.setAttribute('aria-label', `${isSaved ? 'Remove from' : 'Add to'} favorites`);
+    button.disabled = true;
+    try {
+      const isSaved = await toggleFavorite(button.dataset.favoriteId);
+      button.setAttribute('aria-pressed', String(isSaved));
+      button.setAttribute('aria-label', `${isSaved ? 'Remove from' : 'Add to'} favorites`);
+    } catch (error) {
+      window.alert(error.message || 'Could not update favorites.');
+    } finally {
+      button.disabled = false;
+    }
   });
 }
 
@@ -76,5 +86,10 @@ export function initHomePage() {
   renderCategories();
   renderPopularTags();
   connectHomeSearch();
-  renderFeaturedRestaurants();
+  const user = getCurrentUser();
+  const favoritesReady = user?.emailVerified === true ? loadFavorites().catch(() => null) : Promise.resolve();
+  favoritesReady.then(() => renderFeaturedRestaurants()).catch((error) => {
+    const container = document.querySelector('#featured-restaurants');
+    if (container) container.innerHTML = `<p class="col-span-full text-center text-sm text-on-surface-variant">${escapeHTML(error.message || 'Could not load places.')}</p>`;
+  });
 }

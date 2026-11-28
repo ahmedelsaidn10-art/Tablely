@@ -1,9 +1,9 @@
-import { getRestaurantById } from '../services/restaurants.service.js';
 import { deleteReview, getMyReviews, updateReview } from '../services/reviews.service.js';
 import { escapeHTML } from '../utils/helpers.js';
 
 const page = document.querySelector('[data-my-reviews-page]');
 const reviewsContainer = document.querySelector('#reviews-container');
+const pagination = document.querySelector('#my-reviews-pagination');
 const emptyState = document.querySelector('#reviews-empty');
 const editModal = document.querySelector('#edit-review-modal');
 const deleteModal = document.querySelector('#delete-review-modal');
@@ -20,6 +20,9 @@ let selectedRating = 0;
 let activeModal = null;
 let returnFocusTo = null;
 let toastTimer;
+let currentPage = 1;
+let totalPages = 0;
+let totalReviews = 0;
 
 function formatDate(value) {
   if (!value) return 'Date unavailable';
@@ -87,9 +90,9 @@ function createReviewMarkup(review) {
 }
 
 function updateMetrics() {
-  const total = reviews.length;
-  const average = total
-    ? reviews.reduce((sum, review) => sum + Number(review.rating || 0), 0) / total
+  const total = totalReviews;
+  const average = reviews.length
+    ? reviews.reduce((sum, review) => sum + Number(review.rating || 0), 0) / reviews.length
     : 0;
   const places = new Set(reviews.map((review) => review.restaurantId)).size;
 
@@ -98,7 +101,7 @@ function updateMetrics() {
   document.querySelector('#metric-places').textContent = String(places);
 
   const counts = {
-    all: total,
+    all: totalReviews,
     restaurant: reviews.filter((review) => getPlaceType(review) === 'restaurant').length,
     cafe: reviews.filter((review) => getPlaceType(review) === 'cafe').length,
   };
@@ -131,7 +134,7 @@ function renderReviews() {
   reviewsContainer.classList.toggle('hidden', visibleReviews.length === 0);
   emptyState.classList.toggle('hidden', visibleReviews.length > 0);
 
-  const hasAnyReviews = reviews.length > 0;
+  const hasAnyReviews = totalReviews > 0;
   document.querySelector('#empty-title').textContent = hasAnyReviews
     ? `No ${activeFilter === 'cafe' ? 'cafe' : 'restaurant'} reviews yet`
     : 'You have not written any reviews yet';
@@ -139,6 +142,22 @@ function renderReviews() {
     ? 'Choose another filter to see your reviews.'
     : 'After you book a place, share your experience from its details page and your review will appear here.';
   document.querySelector('#empty-action').classList.toggle('hidden', hasAnyReviews);
+}
+
+function renderPagination() {
+  pagination.replaceChildren();
+  pagination.classList.toggle('hidden', totalPages <= 1);
+  for (let number = 1; number <= totalPages; number += 1) {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.dataset.page = String(number);
+    button.textContent = String(number);
+    button.className = number === currentPage
+      ? 'h-10 w-10 rounded-xl bg-primary text-sm font-bold text-on-primary'
+      : 'h-10 w-10 rounded-xl border border-surface-high bg-surface text-sm font-semibold text-on-surface';
+    if (number === currentPage) button.setAttribute('aria-current', 'page');
+    pagination.append(button);
+  }
 }
 
 function showToast(message) {
@@ -211,7 +230,7 @@ function bindEvents() {
     const actionButton = event.target.closest('[data-action]');
     if (!actionButton) return;
     const card = actionButton.closest('[data-review-id]');
-    const review = reviews.find((item) => item.id === card?.dataset.reviewId);
+    const review = reviews.find((item) => String(item.id) === card?.dataset.reviewId);
     if (!review) return;
     if (actionButton.dataset.action === 'edit') openEditModal(review, actionButton);
     if (actionButton.dataset.action === 'delete') openDeleteModal(review, actionButton);
@@ -224,7 +243,7 @@ function bindEvents() {
     document.querySelector('#edit-char-count').textContent = `${commentInput.value.length} / 500`;
   });
 
-  editForm.addEventListener('submit', (event) => {
+  editForm.addEventListener('submit', async (event) => {
     event.preventDefault();
     if (!selectedReview) return;
     if (selectedRating < 1 || selectedRating > 5) {
@@ -232,7 +251,10 @@ function bindEvents() {
       return;
     }
 
-    const saved = updateReview(selectedReview.id, {
+    const submitButton = editForm.querySelector('[type="submit"]');
+    if (submitButton) submitButton.disabled = true;
+    try {
+    const saved = await updateReview(selectedReview.id, {
       rating: selectedRating,
       comment: commentInput.value.trim(),
     });
@@ -243,21 +265,26 @@ function bindEvents() {
 
     closeModal(editModal);
     selectedReview = null;
-    refreshReviews();
+    await refreshReviews();
     showToast('Your review was updated.');
+    } catch (error) {
+      showToast(error.message || 'Could not save your changes.');
+    } finally { if (submitButton) submitButton.disabled = false; }
   });
 
-  document.querySelector('#confirm-delete-review').addEventListener('click', () => {
+  document.querySelector('#confirm-delete-review').addEventListener('click', async (event) => {
     if (!selectedReview) return;
-    const removed = deleteReview(selectedReview.id);
-    if (!removed) {
-      showToast('Could not delete the review. Please try again.');
-      return;
-    }
-    closeModal(deleteModal);
-    selectedReview = null;
-    refreshReviews();
-    showToast('Your review was deleted.');
+    const button = event.currentTarget;
+    button.disabled = true;
+    try {
+      await deleteReview(selectedReview.id);
+      if (reviews.length === 1 && currentPage > 1) currentPage -= 1;
+      closeModal(deleteModal);
+      selectedReview = null;
+      await refreshReviews();
+      showToast('Your review was deleted.');
+    } catch (error) { showToast(error.message || 'Could not delete the review. Please try again.'); }
+    finally { button.disabled = false; }
   });
 
   document.querySelectorAll('[data-close-edit]').forEach((button) => {
@@ -274,15 +301,27 @@ function bindEvents() {
   document.addEventListener('keydown', (event) => {
     if (event.key === 'Escape' && activeModal) closeModal(activeModal);
   });
+  pagination.addEventListener('click', async (event) => {
+    const button = event.target.closest('[data-page]');
+    if (!button) return;
+    currentPage = Number(button.dataset.page);
+    await refreshReviews();
+  });
 }
 
 async function refreshReviews() {
-  const savedReviews = getMyReviews();
-  reviews = await Promise.all(savedReviews.map(async (review) => ({
-    ...review,
-    restaurant: await getRestaurantById(review.restaurantId),
-  })));
+  try {
+    const result = await getMyReviews({ page: currentPage, pageSize: 6 });
+    reviews = result.items || [];
+    currentPage = result.page || currentPage;
+    totalPages = result.totalPages || 0;
+    totalReviews = result.totalItems || 0;
+  } catch (error) {
+    reviewsContainer.innerHTML = `<p class="rounded-xl bg-red-50 p-4 text-sm text-red-800">${error.message || 'Could not load reviews.'}</p>`;
+    return;
+  }
   renderReviews();
+  renderPagination();
 }
 
 export async function initMyReviewsPage() {

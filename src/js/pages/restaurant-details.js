@@ -1,15 +1,17 @@
 import { createReviewCard } from '../components/review-card.js';
 import { getRestaurantById } from '../services/restaurants.service.js';
 import { hasBookingForRestaurant, createBooking } from '../services/bookings.service.js';
-import { addReview, getRatingSummary, getReviewsByRestaurant } from '../services/reviews.service.js';
-import { isFavorite, toggleFavorite } from '../services/favorites.service.js';
+import { addReview, getReviewsByRestaurant } from '../services/reviews.service.js';
+import { isFavorite, loadFavorites, toggleFavorite } from '../services/favorites.service.js';
 import { getCurrentUser } from '../services/auth.service.js';
 import { escapeHTML } from '../utils/helpers.js';
+import { requireVerifiedUser } from '../utils/favorite-access.js';
 
 const page = document.querySelector('[data-restaurant-details-page]');
 const menuFilters = document.querySelector('#menu-filters');
 const menuItems = document.querySelector('#menu-items');
 const reviewsList = document.querySelector('#reviews-list');
+const reviewsPagination = document.querySelector('#reviews-pagination');
 const toast = document.querySelector('#page-toast');
 
 const defaultMenu = [
@@ -34,6 +36,16 @@ let selectedGuests = 2;
 let selectedTime = '6:00 PM';
 let toastTimer;
 let activeModal = null;
+let reviewPage = 1;
+let reviewTotalPages = 0;
+
+function toBackendTime(value) {
+  const match = String(value).match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
+  if (!match) return value;
+  let hour = Number(match[1]) % 12;
+  if (match[3].toUpperCase() === 'PM') hour += 12;
+  return `${String(hour).padStart(2, '0')}:${match[2]}`;
+}
 
 function showToast(message) {
   window.clearTimeout(toastTimer);
@@ -104,17 +116,40 @@ function renderRestaurantInfo() {
 }
 
 function renderRatingSummary() {
-  const summary = getRatingSummary(restaurant);
-  const average = summary.average ? summary.average.toFixed(1) : 'New';
+  const average = Number(restaurant.rating || 0) ? Number(restaurant.rating).toFixed(1) : 'New';
+  const count = Number(restaurant.reviewCount || 0);
   document.querySelector('#restaurant-rating').textContent = average;
-  document.querySelector('#restaurant-review-count').textContent = `${summary.count} ${summary.count === 1 ? 'review' : 'reviews'}`;
+  document.querySelector('#restaurant-review-count').textContent = `${count} ${count === 1 ? 'review' : 'reviews'}`;
   document.querySelector('#reviews-summary-rating').textContent = average;
-  document.querySelector('#reviews-summary-count').textContent = summary.count;
+  document.querySelector('#reviews-summary-count').textContent = count;
+}
 
-  const reviews = getReviewsByRestaurant(restaurant.id);
-  reviewsList.innerHTML = reviews.length
-    ? reviews.map(createReviewCard).join('')
-    : '<p class="rounded-2xl bg-surface-low p-5 text-sm text-on-surface-variant">No written reviews yet. Be the first guest to share your experience.</p>';
+async function loadRestaurantReviews() {
+  reviewsList.innerHTML = '<p class="text-sm text-on-surface-variant">Loading reviews...</p>';
+  try {
+    const result = await getReviewsByRestaurant(restaurant.id, { page: reviewPage, pageSize: 5 });
+    reviewPage = result.page || reviewPage;
+    reviewTotalPages = result.totalPages || 0;
+    const reviews = result.items || [];
+    reviewsList.innerHTML = reviews.length
+      ? reviews.map(createReviewCard).join('')
+      : '<p class="rounded-2xl bg-surface-low p-5 text-sm text-on-surface-variant">No written reviews yet. Be the first guest to share your experience.</p>';
+    reviewsPagination.replaceChildren();
+    reviewsPagination.classList.toggle('hidden', reviewTotalPages <= 1);
+    for (let number = 1; number <= reviewTotalPages; number += 1) {
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.dataset.reviewPage = String(number);
+      button.textContent = String(number);
+      button.className = number === reviewPage
+        ? 'h-9 w-9 rounded-lg bg-primary text-sm font-bold text-on-primary'
+        : 'h-9 w-9 rounded-lg border border-surface-high text-sm font-semibold text-on-surface';
+      if (number === reviewPage) button.setAttribute('aria-current', 'page');
+      reviewsPagination.append(button);
+    }
+  } catch (error) {
+    reviewsList.innerHTML = `<p class="rounded-xl bg-red-50 p-4 text-sm text-red-800">${escapeHTML(error.message || 'Could not load reviews.')}</p>`;
+  }
 }
 
 function renderMenuFilters(menu) {
@@ -197,10 +232,15 @@ function bindReservationForm() {
     updateChoiceButtons('.time-option', button);
   });
 
-  document.querySelector('#reservation-form').addEventListener('submit', (event) => {
+  document.querySelector('#reservation-form').addEventListener('submit', async (event) => {
     event.preventDefault();
     if (!getCurrentUser()) {
       window.location.href = 'login.html';
+      return;
+    }
+    if (getCurrentUser()?.emailVerified !== true) {
+      const email = encodeURIComponent(getCurrentUser()?.email || '');
+      window.location.href = `verify-email.html${email ? `?email=${email}` : ''}`;
       return;
     }
 
@@ -208,17 +248,19 @@ function bindReservationForm() {
     if (!form.reportValidity()) return;
 
     const formData = new FormData(form);
-    const booking = createBooking({
+    const submitButton = form.querySelector('[type="submit"]');
+    if (submitButton) submitButton.disabled = true;
+    try {
+    const booking = await createBooking({
       restaurantId: restaurant.id,
-      restaurantName: restaurant.name,
       date: String(formData.get('date')),
-      time: selectedTime,
+      time: toBackendTime(selectedTime),
       guests: selectedGuests,
       specialRequests: String(formData.get('requests') || '').trim(),
     });
 
     if (!booking) {
-      showToast('Could not save your reservation. Please check browser storage and try again.');
+      showToast('Could not save your reservation. Please try again.');
       return;
     }
 
@@ -226,6 +268,11 @@ function bindReservationForm() {
       .format(new Date(`${booking.date}T00:00:00`));
     document.querySelector('#booking-success-summary').textContent = `${restaurant.name} · ${dateLabel} at ${booking.time} · ${booking.guests} guests`;
     setModalVisibility(document.querySelector('#booking-success-modal'), true);
+    } catch (error) {
+      showToast(error.message || 'Could not save your reservation. Please try again.');
+    } finally {
+      if (submitButton) submitButton.disabled = false;
+    }
   });
 }
 
@@ -243,10 +290,13 @@ function bindReviewForm() {
   const modal = document.querySelector('#review-modal');
   const reviewForm = document.querySelector('#review-form');
 
-  document.querySelector('#write-review-button').addEventListener('click', () => {
+  document.querySelector('#write-review-button').addEventListener('click', async () => {
+    if (!getCurrentUser()) { window.location.href = 'login.html'; return; }
+    if (!requireVerifiedUser()) return;
     const eligibilityMessage = document.querySelector('#review-eligibility-message');
-    if (!hasBookingForRestaurant(restaurant.id)) {
-      eligibilityMessage.textContent = 'You need a completed booking at this restaurant before you can write a review.';
+    try {
+    if (!await hasBookingForRestaurant(restaurant.id)) {
+      eligibilityMessage.textContent = 'You need to book this restaurant before you can write a review.';
       eligibilityMessage.classList.remove('hidden');
       return;
     }
@@ -258,6 +308,10 @@ function bindReviewForm() {
     reviewForm.reset();
     setModalVisibility(modal, true);
     modal.querySelector('[data-rating="1"]').focus();
+    } catch (error) {
+      eligibilityMessage.textContent = error.message || 'Could not check your booking.';
+      eligibilityMessage.classList.remove('hidden');
+    }
   });
 
   document.querySelector('#review-stars').addEventListener('click', (event) => {
@@ -267,15 +321,17 @@ function bindReviewForm() {
     updateReviewStars();
   });
 
-  reviewForm.addEventListener('submit', (event) => {
+  reviewForm.addEventListener('submit', async (event) => {
     event.preventDefault();
     if (selectedRating < 1 || selectedRating > 5) {
       document.querySelector('#review-rating-error').classList.remove('hidden');
       return;
     }
 
-    const review = addReview({
-      restaurantId: restaurant.id,
+    const submitButton = reviewForm.querySelector('[type="submit"]');
+    if (submitButton) submitButton.disabled = true;
+    try {
+    const review = await addReview(restaurant.id, {
       rating: selectedRating,
       comment: document.querySelector('#review-comment').value.trim(),
     });
@@ -284,9 +340,17 @@ function bindReviewForm() {
       return;
     }
 
+    restaurant = await getRestaurantById(restaurant.id);
     renderRatingSummary();
+    reviewPage = 1;
+    await loadRestaurantReviews();
     setModalVisibility(modal, false);
     showToast('Your review has been submitted successfully.');
+    } catch (error) {
+      showToast(error.message || 'Could not save your review. Please try again.');
+    } finally {
+      if (submitButton) submitButton.disabled = false;
+    }
   });
 
   modal.querySelectorAll('[data-close-review-modal]').forEach((button) => {
@@ -313,8 +377,14 @@ function bindModals() {
 
 export async function initRestaurantDetailsPage() {
   if (!page) return;
-  const restaurantId = new URLSearchParams(window.location.search).get('id') || 'garden-bistro';
-  restaurant = await getRestaurantById(restaurantId);
+  const restaurantId = new URLSearchParams(window.location.search).get('id');
+  try {
+    restaurant = await getRestaurantById(restaurantId);
+  } catch (error) {
+    document.querySelector('#restaurant-name').textContent = 'Could not load restaurant';
+    document.querySelector('#restaurant-subtitle').textContent = error.message || 'Check your connection and try again.';
+    return;
+  }
 
   if (!restaurant) {
     document.querySelector('#restaurant-name').textContent = 'Restaurant not found';
@@ -327,7 +397,11 @@ export async function initRestaurantDetailsPage() {
     return;
   }
 
+  if (getCurrentUser()?.emailVerified === true) {
+    try { await loadFavorites(); } catch { /* Favorite state can be refreshed from the button. */ }
+  }
   renderRestaurantInfo();
+  await loadRestaurantReviews();
   const menu = restaurant.menu?.length ? restaurant.menu : defaultMenu;
   renderMenuFilters(menu);
   renderMenuItems(menu);
@@ -335,9 +409,22 @@ export async function initRestaurantDetailsPage() {
   bindReviewForm();
   bindModals();
 
-  document.querySelector('#favorite-button').addEventListener('click', () => {
-    const saved = toggleFavorite(restaurant.id);
-    updateFavoriteButton();
-    showToast(saved ? 'Added to your favorites.' : 'Removed from your favorites.');
+  document.querySelector('#favorite-button').addEventListener('click', async () => {
+    if (!requireVerifiedUser()) return;
+    const button = document.querySelector('#favorite-button');
+    button.disabled = true;
+    try {
+      const saved = await toggleFavorite(restaurant.id);
+      updateFavoriteButton();
+      showToast(saved ? 'Added to your favorites.' : 'Removed from your favorites.');
+    } catch (error) { showToast(error.message || 'Could not update favorites.'); }
+    finally { button.disabled = false; }
+  });
+
+  reviewsPagination.addEventListener('click', async (event) => {
+    const button = event.target.closest('[data-review-page]');
+    if (!button) return;
+    reviewPage = Number(button.dataset.reviewPage);
+    await loadRestaurantReviews();
   });
 }

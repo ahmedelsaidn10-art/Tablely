@@ -1,6 +1,8 @@
 import { createRestaurantCard } from '../components/restaurant-card.js';
-import { getFeaturedRestaurants } from '../services/restaurants.service.js';
-import { toggleFavorite } from '../services/favorites.service.js';
+import { getRestaurants } from '../services/restaurants.service.js';
+import { loadFavorites, toggleFavorite } from '../services/favorites.service.js';
+import { getCurrentUser } from '../services/auth.service.js';
+import { requireVerifiedUser } from '../utils/favorite-access.js';
 
 const page = document.querySelector('[data-explore-page]');
 const searchForm = document.querySelector('#explore-search-form');
@@ -17,139 +19,108 @@ const toast = document.querySelector('#explore-toast');
 const toastMessage = document.querySelector('#explore-toast-message');
 
 const pageSize = 6;
-let restaurants = [];
 let currentPage = 1;
-let appliedFilters = { query: '', type: 'all', location: 'all', rating: 0, category: '' };
+let totalPages = 0;
+let activeCategory = '';
 let toastTimer;
 
-function normalize(value) {
-  return String(value || '').trim().toLowerCase();
+function filtersFromControls() {
+  return {
+    q: searchInput.value.trim(),
+    type: typeFilter.value === 'all' ? '' : typeFilter.value,
+    location: locationFilter.value.trim() === 'all' ? '' : locationFilter.value.trim(),
+    minRating: Number(ratingFilter.value) || '',
+    sort: sortSelect.value,
+    category: activeCategory,
+  };
 }
 
-function populateLocations() {
-  const locations = [...new Set(restaurants.map((place) => place.location))].sort();
-  locations.forEach((location) => {
-    const option = document.createElement('option');
-    option.value = location;
-    option.textContent = location;
-    locationFilter.append(option);
-  });
+function setLoading(isLoading) {
+  grid.setAttribute('aria-busy', String(isLoading));
+  if (isLoading) grid.innerHTML = '<p class="col-span-full py-10 text-center text-sm text-on-surface-variant">Loading places...</p>';
+}
+
+function renderPagination() {
+  pagination.replaceChildren();
+  pagination.classList.toggle('hidden', totalPages <= 1);
+  if (totalPages <= 1) return;
+  const addButton = (label, target, disabled, current = false) => {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.dataset.page = String(target);
+    button.textContent = label;
+    button.disabled = disabled;
+    button.setAttribute('aria-label', current ? `Page ${target}` : label);
+    if (current) button.setAttribute('aria-current', 'page');
+    button.className = current
+      ? 'h-10 min-w-10 rounded-xl bg-primary px-3 text-sm font-bold text-on-primary'
+      : 'h-10 min-w-10 rounded-xl border border-surface-high bg-surface px-3 text-sm font-semibold text-on-surface disabled:opacity-40';
+    pagination.append(button);
+  };
+  addButton('Previous', currentPage - 1, currentPage === 1);
+  for (let number = 1; number <= totalPages; number += 1) addButton(String(number), number, false, number === currentPage);
+  addButton('Next', currentPage + 1, currentPage === totalPages);
+}
+
+async function renderPlaces() {
+  setLoading(true);
+  try {
+    const result = await getRestaurants({ ...filtersFromControls(), page: currentPage, pageSize });
+    const places = result.items || [];
+    currentPage = result.page || currentPage;
+    totalPages = result.totalPages || 0;
+    resultsCount.textContent = `${result.totalItems || 0} ${(result.totalItems || 0) === 1 ? 'place' : 'places'} found`;
+    grid.innerHTML = places.map(createRestaurantCard).join('');
+    grid.classList.toggle('hidden', places.length === 0);
+    emptyState.classList.toggle('hidden', places.length > 0);
+    renderPagination();
+  } catch (error) {
+    grid.innerHTML = '';
+    grid.classList.add('hidden');
+    emptyState.classList.remove('hidden');
+    emptyState.querySelector('h2').textContent = 'Could not load places';
+    emptyState.querySelector('p').textContent = error.message || 'Check your connection and try again.';
+    resultsCount.textContent = 'Places unavailable';
+    pagination.classList.add('hidden');
+  } finally {
+    grid.setAttribute('aria-busy', 'false');
+  }
 }
 
 function readUrlFilters() {
   const params = new URLSearchParams(window.location.search);
-  const query = params.get('q') || '';
-  const location = params.get('location') || 'all';
-  const category = params.get('category') || '';
-
-  searchInput.value = query;
-  if ([...locationFilter.options].some((option) => option.value === location)) {
+  searchInput.value = params.get('q') || '';
+  const type = params.get('type') || (['restaurant', 'cafe'].includes(params.get('category')) ? params.get('category') : 'all');
+  typeFilter.value = type;
+  activeCategory = ['fine-dining', 'casual-dining', 'cafes', 'coffee', 'brunch'].includes(params.get('category'))
+    ? params.get('category')
+    : '';
+  if (params.get('category') === 'fast-food') searchInput.value = 'fast food';
+  const location = params.get('location');
+  if (location) {
+    const option = document.createElement('option');
+    option.value = location;
+    option.textContent = location;
+    locationFilter.append(option);
     locationFilter.value = location;
   }
-
-  appliedFilters = {
-    query,
-    type: category === 'restaurant' || category === 'cafe' ? category : 'all',
-    location,
-    rating: 0,
-    category: category && category !== 'restaurant' && category !== 'cafe' ? category : '',
-  };
-  typeFilter.value = appliedFilters.type;
 }
 
-function matchesCategory(place, category) {
-  if (!category) return true;
-  const searchable = normalize([place.name, place.type, place.cuisine, place.price, ...(place.tags || [])].join(' '));
-  if (category === 'fine-dining') return place.price === '$$$$' || searchable.includes('fine dining');
-  if (category === 'casual-dining') return place.type.toLowerCase() === 'restaurant' && place.price.length <= 3;
-  return searchable.includes(category.replaceAll('-', ' '));
-}
-
-function getFilteredPlaces() {
-  const searchText = normalize(appliedFilters.query);
-  const matchingPlaces = restaurants.filter((place) => {
-    const searchable = normalize([place.name, place.type, place.cuisine, place.location, ...(place.tags || [])].join(' '));
-    return (!searchText || searchable.includes(searchText))
-      && (appliedFilters.type === 'all' || place.type.toLowerCase() === appliedFilters.type)
-      && (appliedFilters.location === 'all' || place.location === appliedFilters.location)
-      && place.rating >= appliedFilters.rating
-      && matchesCategory(place, appliedFilters.category);
-  });
-
-  if (sortSelect.value === 'lowest') matchingPlaces.sort((a, b) => a.rating - b.rating);
-  else if (sortSelect.value === 'reviews') matchingPlaces.sort((a, b) => b.reviewCount - a.reviewCount);
-  else matchingPlaces.sort((a, b) => b.rating - a.rating);
-
-  return matchingPlaces;
-}
-
-function renderPagination(totalPages) {
-  pagination.innerHTML = '';
-  pagination.classList.toggle('hidden', totalPages <= 1);
-  if (totalPages <= 1) return;
-
-  const previous = document.createElement('button');
-  previous.type = 'button';
-  previous.dataset.page = String(currentPage - 1);
-  previous.disabled = currentPage === 1;
-  previous.className = 'inline-flex min-h-10 items-center gap-1 rounded-xl border border-surface-high bg-surface px-3.5 text-sm font-semibold text-on-surface-variant transition hover:border-primary hover:text-primary disabled:cursor-not-allowed disabled:opacity-40';
-  previous.innerHTML = '<span class="material-symbols-outlined text-lg" aria-hidden="true">chevron_left</span><span>Previous</span>';
-  pagination.append(previous);
-
-  for (let pageNumber = 1; pageNumber <= totalPages; pageNumber += 1) {
-    const button = document.createElement('button');
-    button.type = 'button';
-    button.dataset.page = String(pageNumber);
-    button.textContent = String(pageNumber);
-    button.setAttribute('aria-label', `Page ${pageNumber}`);
-    button.setAttribute('aria-current', pageNumber === currentPage ? 'page' : 'false');
-    button.className = pageNumber === currentPage
-      ? 'h-10 w-10 rounded-xl bg-primary text-sm font-bold text-on-primary shadow-sm'
-      : 'h-10 w-10 rounded-xl border border-surface-high bg-surface text-sm font-semibold text-on-surface transition hover:border-primary hover:text-primary';
-    pagination.append(button);
-  }
-
-  const next = document.createElement('button');
-  next.type = 'button';
-  next.dataset.page = String(currentPage + 1);
-  next.disabled = currentPage === totalPages;
-  next.className = 'inline-flex min-h-10 items-center gap-1 rounded-xl border border-surface-high bg-surface px-3.5 text-sm font-semibold text-on-surface-variant transition hover:border-primary hover:text-primary disabled:cursor-not-allowed disabled:opacity-40';
-  next.innerHTML = '<span>Next</span><span class="material-symbols-outlined text-lg" aria-hidden="true">chevron_right</span>';
-  pagination.append(next);
-}
-
-function renderPlaces() {
-  const places = getFilteredPlaces();
-  const totalPages = Math.ceil(places.length / pageSize);
-  currentPage = Math.min(currentPage, Math.max(totalPages, 1));
-  const start = (currentPage - 1) * pageSize;
-  const currentPlaces = places.slice(start, start + pageSize);
-
-  resultsCount.textContent = `${places.length} ${places.length === 1 ? 'place' : 'places'} found`;
-  grid.innerHTML = currentPlaces.map(createRestaurantCard).join('');
-  grid.classList.toggle('hidden', places.length === 0);
-  emptyState.classList.toggle('hidden', places.length > 0);
-  renderPagination(totalPages);
+function updateUrl() {
+  const params = new URLSearchParams();
+  const filters = filtersFromControls();
+  if (filters.q) params.set('q', filters.q);
+  if (filters.type) params.set('type', filters.type);
+  if (filters.category) params.set('category', filters.category);
+  if (filters.location) params.set('location', filters.location);
+  if (filters.minRating) params.set('minRating', String(filters.minRating));
+  if (filters.sort !== 'highest') params.set('sort', filters.sort);
+  window.history.replaceState(null, '', `${window.location.pathname}${params.size ? `?${params}` : ''}`);
 }
 
 function applyFilters() {
-  const params = new URLSearchParams();
-  const query = searchInput.value.trim();
-  if (query) params.set('q', query);
-  if (typeFilter.value !== 'all') params.set('category', typeFilter.value);
-  else if (appliedFilters.category) params.set('category', appliedFilters.category);
-  if (locationFilter.value !== 'all') params.set('location', locationFilter.value);
-
-  appliedFilters = {
-    query,
-    type: typeFilter.value,
-    location: locationFilter.value,
-    rating: Number(ratingFilter.value),
-    category: typeFilter.value === 'all' ? appliedFilters.category : '',
-  };
   currentPage = 1;
-  const queryString = params.toString();
-  window.history.replaceState(null, '', `${window.location.pathname}${queryString ? `?${queryString}` : ''}`);
+  updateUrl();
   renderPlaces();
 }
 
@@ -158,9 +129,10 @@ function clearFilters() {
   typeFilter.value = 'all';
   locationFilter.value = 'all';
   ratingFilter.value = '0';
-  appliedFilters = { query: '', type: 'all', location: 'all', rating: 0, category: '' };
+  activeCategory = '';
+  sortSelect.value = 'highest';
   currentPage = 1;
-  window.history.replaceState(null, '', window.location.pathname);
+  updateUrl();
   renderPlaces();
 }
 
@@ -176,27 +148,25 @@ function showToast(message) {
 }
 
 function bindEvents() {
-  searchForm.addEventListener('submit', (event) => {
-    event.preventDefault();
-    applyFilters();
-  });
+  searchForm.addEventListener('submit', (event) => { event.preventDefault(); applyFilters(); });
   document.querySelector('#apply-filters-btn').addEventListener('click', applyFilters);
   document.querySelector('#clear-filters-btn').addEventListener('click', clearFilters);
   document.querySelector('#empty-clear-btn').addEventListener('click', clearFilters);
-  sortSelect.addEventListener('change', () => {
-    currentPage = 1;
-    renderPlaces();
-  });
-
-  grid.addEventListener('click', (event) => {
+  typeFilter.addEventListener('change', () => { activeCategory = ''; applyFilters(); });
+  sortSelect.addEventListener('change', applyFilters);
+  grid.addEventListener('click', async (event) => {
     const button = event.target.closest('[data-favorite-id]');
     if (!button) return;
-    const isSaved = toggleFavorite(button.dataset.favoriteId);
-    button.setAttribute('aria-pressed', String(isSaved));
-    button.setAttribute('aria-label', `${isSaved ? 'Remove from' : 'Add to'} favorites`);
-    showToast(isSaved ? 'Place added to your favorites.' : 'Place removed from your favorites.');
+    if (!requireVerifiedUser()) return;
+    button.disabled = true;
+    try {
+      const saved = await toggleFavorite(button.dataset.favoriteId);
+      button.setAttribute('aria-pressed', String(saved));
+      button.setAttribute('aria-label', `${saved ? 'Remove from' : 'Add to'} favorites`);
+      showToast(saved ? 'Place added to your favorites.' : 'Place removed from your favorites.');
+    } catch (error) { showToast(error.message || 'Could not update favorites.'); }
+    finally { button.disabled = false; }
   });
-
   pagination.addEventListener('click', (event) => {
     const button = event.target.closest('[data-page]');
     if (!button || button.disabled) return;
@@ -208,9 +178,10 @@ function bindEvents() {
 
 export async function initExplorePage() {
   if (!page || !grid) return;
-  restaurants = await getFeaturedRestaurants();
-  populateLocations();
   readUrlFilters();
   bindEvents();
-  renderPlaces();
+  if (getCurrentUser()?.emailVerified === true) {
+    try { await loadFavorites(); } catch { /* Favorite state can be refreshed when the user clicks a heart. */ }
+  }
+  await renderPlaces();
 }

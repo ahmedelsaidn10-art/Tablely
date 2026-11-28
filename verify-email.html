@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#fff8f4" />
+    <meta name="description" content="Verify your email address for your Tablely account." />
+    <title>Verify Your Email | Tablely</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&family=Material+Symbols+Outlined:FILL@0..1&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/src/css/input.css" />
+    <script>
+      // Restore the selected theme before the page paints.
+      try {
+        const savedValue = localStorage.getItem('tablely-theme');
+        let savedTheme = savedValue;
+        try { savedTheme = JSON.parse(savedValue); } catch { /* Older values may be plain strings. */ }
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        if (savedTheme === 'dark' || (!savedTheme && prefersDark)) document.documentElement.classList.add('dark');
+      } catch {
+        // Keep the light theme if browser storage is unavailable.
+      }
+    </script>
+  </head>
+  <body class="overflow-x-hidden">
+    <header id="site-header"></header>
+
+    <main data-verify-email-page class="page-shell flex min-h-[calc(100vh-8rem)] items-center py-8 sm:py-12">
+      <section class="grid w-full overflow-hidden rounded-3xl border border-surface-high bg-surface shadow-xl lg:min-h-[600px] lg:grid-cols-12" aria-labelledby="verify-title">
+        <div class="flex items-center px-5 py-8 sm:px-9 sm:py-10 lg:col-span-7 lg:px-12">
+          <div class="mx-auto w-full max-w-lg">
+            <p class="inline-flex items-center gap-2 rounded-full bg-primary/10 px-3 py-1.5 text-xs font-bold uppercase tracking-[0.14em] text-primary">
+              <span class="h-1.5 w-1.5 rounded-full bg-primary" aria-hidden="true"></span> One last step
+            </p>
+            <h1 id="verify-title" class="mt-4 font-display text-3xl font-extrabold tracking-tight text-on-surface sm:text-4xl">Verify your email</h1>
+            <p class="mt-3 text-sm leading-6 text-on-surface-variant sm:text-base">Enter the six-digit code sent to <strong id="verify-email-address" class="break-all text-on-surface">your email address</strong>.</p>
+
+            <div id="verify-message" class="mt-6 hidden rounded-2xl border px-4 py-3 text-sm" role="status" aria-live="polite">
+              <p id="verify-message-title" class="font-bold"></p>
+              <p id="verify-message-description" class="mt-1 text-xs leading-5"></p>
+            </div>
+
+            <form id="verify-form" class="mt-7 space-y-5" novalidate>
+              <div>
+                <label class="mb-2 block text-sm font-semibold text-on-surface" for="verify-code">Verification code</label>
+                <input id="verify-code" class="min-h-14 w-full rounded-xl border border-surface-high bg-surface-low px-4 text-center font-display text-2xl font-bold tracking-[0.5em] text-on-surface placeholder:text-on-surface-variant/50 focus:border-primary focus:bg-surface focus:outline-none focus:ring-2 focus:ring-primary/20" type="text" name="code" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}" maxlength="6" placeholder="••••••" aria-describedby="verify-code-error" required />
+                <p id="verify-code-error" class="mt-1.5 hidden text-xs font-semibold text-red-700" aria-live="polite"></p>
+              </div>
+
+              <button id="verify-submit" class="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-primary px-6 py-3 font-display text-sm font-bold text-on-primary shadow-lg shadow-primary/20 transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60 sm:text-base" type="submit">
+                Verify email <span class="material-symbols-outlined text-lg" aria-hidden="true">arrow_forward</span>
+              </button>
+            </form>
+
+            <div class="mt-6 flex flex-wrap items-center justify-between gap-3 text-sm">
+              <button id="resend-code" class="font-bold text-primary transition hover:underline" type="button">Resend code</button>
+              <a class="font-semibold text-on-surface-variant transition hover:text-primary" href="register.html">Use a different email</a>
+            </div>
+            <p class="mt-6 rounded-xl bg-surface-low px-4 py-3 text-xs leading-5 text-on-surface-variant">Enter the six-digit code sent to your inbox. If it does not arrive, check your spam folder or request a new code.</p>
+          </div>
+        </div>
+
+        <div class="group relative min-h-72 overflow-hidden bg-dark-base sm:min-h-96 lg:col-span-5 lg:min-h-full">
+          <img class="absolute inset-0 h-full w-full object-cover transition duration-700 group-hover:scale-105" src="/images/restaurants/garden-bistro-interior-3.jpg" alt="Warm dining room prepared for guests" loading="lazy" />
+          <div class="absolute inset-0 bg-linear-to-t from-black/90 via-black/30 to-black/10"></div>
+          <div class="absolute left-5 top-5 rounded-full border border-white/25 bg-black/25 px-3 py-1.5 text-xs font-bold uppercase tracking-wider text-white backdrop-blur sm:left-7 sm:top-7">Your Tablely account</div>
+          <div class="absolute inset-x-5 bottom-5 rounded-2xl border border-white/20 bg-black/35 p-5 text-white backdrop-blur-md sm:inset-x-7 sm:bottom-7 sm:p-6">
+            <span class="inline-flex h-11 w-11 items-center justify-center rounded-full bg-white/15 text-amber-300"><span class="material-symbols-outlined text-2xl" aria-hidden="true">mark_email_read</span></span>
+            <h2 class="mt-4 font-display text-xl font-extrabold sm:text-2xl">A little closer to your next great meal.</h2>
+            <p class="mt-2 text-sm leading-6 text-white/80">Verify your address to keep your reservations, favorites, and reviews together.</p>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer id="site-footer" class="mt-auto border-t border-surface-high bg-surface-low"></footer>
+    <script type="module" src="/src/js/main.js"></script>
+  </body>
+</html>

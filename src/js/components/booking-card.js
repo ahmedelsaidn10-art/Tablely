@@ -3,14 +3,17 @@ import { escapeHTML } from '../utils/helpers.js';
 // Build one booking card from a saved reservation.
 export function createBookingCard(booking, restaurant, status) {
   const name = restaurant?.name || booking.restaurantName || 'Restaurant';
-  const image = restaurant?.image || '/images/banners/home-hero.jpg';
-  const imageAlt = restaurant?.imageAlt || `${name} dining room`;
+  const image = restaurant?.image || booking.restaurantImage || '/images/banners/home-hero.jpg';
+  const imageAlt = restaurant?.imageAlt || booking.restaurantImageAlt || `${name} dining room`;
   const date = new Date(`${booking.date}T00:00:00`).toLocaleDateString('en-US', {
     weekday: 'short',
     month: 'short',
     day: 'numeric',
     year: 'numeric',
   });
+  const timeLabel = /^\d{2}:\d{2}$/.test(String(booking.time || ''))
+    ? new Date(`2000-01-01T${booking.time}:00`).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })
+    : booking.time || '—';
   const statusLabels = {
     upcoming: 'Upcoming',
     past: 'Completed',
@@ -34,7 +37,7 @@ export function createBookingCard(booking, restaurant, status) {
             <div>
               <p class="text-xs font-bold uppercase tracking-wider text-primary">${escapeHTML(restaurant?.type || 'Reservation')}</p>
               <h2 class="mt-1 font-display text-xl font-bold text-on-surface">${escapeHTML(name)}</h2>
-              <p class="mt-1 text-sm text-on-surface-variant">${escapeHTML(restaurant?.location || '')}</p>
+              <p class="mt-1 text-sm text-on-surface-variant">${escapeHTML(restaurant?.location || booking.restaurantLocation || '')}</p>
             </div>
             <span class="rounded-full bg-surface-low px-3 py-1.5 text-xs font-semibold text-on-surface-variant">Ref. ${escapeHTML(String(booking.id).slice(-8))}</span>
           </div>
@@ -46,7 +49,7 @@ export function createBookingCard(booking, restaurant, status) {
             </div>
             <div>
               <dt class="flex items-center gap-1.5 text-xs font-semibold text-on-surface-variant"><span class="material-symbols-outlined text-base text-primary" aria-hidden="true">schedule</span>Time</dt>
-              <dd class="mt-1 text-sm font-bold text-on-surface">${escapeHTML(booking.time || '—')}</dd>
+              <dd class="mt-1 text-sm font-bold text-on-surface">${escapeHTML(timeLabel)}</dd>
             </div>
             <div>
               <dt class="flex items-center gap-1.5 text-xs font-semibold text-on-surface-variant"><span class="material-symbols-outlined text-base text-primary" aria-hidden="true">group</span>Guests</dt>

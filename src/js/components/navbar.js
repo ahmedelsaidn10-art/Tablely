@@ -27,8 +27,9 @@ export function renderNavbar(container) {
     } else {
       button.classList.toggle('hidden', !currentUser);
     }
-    button.addEventListener('click', () => {
-      logoutUser();
+    button.addEventListener('click', async () => {
+      button.disabled = true;
+      try { await logoutUser(); } catch { /* The local view still returns to the public page. */ }
       window.location.href = 'index.html';
     });
   });

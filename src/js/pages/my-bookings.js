@@ -1,6 +1,5 @@
 import { createBookingCard } from '../components/booking-card.js';
 import { cancelBooking, getBookings } from '../services/bookings.service.js';
-import { getFeaturedRestaurants } from '../services/restaurants.service.js';
 
 const list = document.querySelector('#bookings-list');
 const emptyState = document.querySelector('#bookings-empty');
@@ -11,6 +10,7 @@ const modal = document.querySelector('#cancel-booking-modal');
 const toast = document.querySelector('#bookings-toast');
 
 let restaurantsById = new Map();
+let bookings = [];
 let activeFilter = 'all';
 let pendingBookingId = null;
 let toastTimer;
@@ -22,7 +22,10 @@ function getToday() {
 
 function getBookingStatus(booking) {
   if (booking.status === 'cancelled') return 'cancelled';
-  if (booking.status === 'completed' || booking.date < getToday()) return 'past';
+  const localNow = new Date();
+  const currentTime = `${String(localNow.getHours()).padStart(2, '0')}:${String(localNow.getMinutes()).padStart(2, '0')}`;
+  if (booking.status === 'completed' || booking.date < getToday()
+    || (booking.date === getToday() && booking.time < currentTime)) return 'past';
   return 'upcoming';
 }
 
@@ -43,8 +46,8 @@ function updateFilterButtons(counts) {
 }
 
 function renderBookings() {
-  const bookings = getBookings().sort((a, b) => String(a.date).localeCompare(String(b.date)));
-  const withStatus = bookings.map((booking) => ({ booking, status: getBookingStatus(booking) }));
+  const orderedBookings = [...bookings].sort((a, b) => String(a.date).localeCompare(String(b.date)));
+  const withStatus = orderedBookings.map((booking) => ({ booking, status: getBookingStatus(booking) }));
   const counts = {
     all: withStatus.length,
     upcoming: withStatus.filter(({ status }) => status === 'upcoming').length,
@@ -107,7 +110,7 @@ function setModalOpen(isOpen) {
 }
 
 function openCancelModal(bookingId) {
-  const booking = getBookings().find((item) => item.id === bookingId);
+  const booking = bookings.find((item) => item.id === bookingId);
   if (!booking || getBookingStatus(booking) !== 'upcoming') return;
 
   pendingBookingId = bookingId;
@@ -144,17 +147,22 @@ function bindInteractions() {
     });
   });
 
-  document.querySelector('#confirm-cancel-booking').addEventListener('click', () => {
+  document.querySelector('#confirm-cancel-booking').addEventListener('click', async (event) => {
     if (!pendingBookingId) return;
-    const didCancel = cancelBooking(pendingBookingId);
-    pendingBookingId = null;
-    setModalOpen(false);
-    if (!didCancel) {
-      showToast('Could not cancel this reservation. Please try again.');
-      return;
+    const button = event.currentTarget;
+    button.disabled = true;
+    try {
+      await cancelBooking(pendingBookingId);
+      bookings = bookings.filter((booking) => booking.id !== pendingBookingId);
+      pendingBookingId = null;
+      setModalOpen(false);
+      renderBookings();
+      showToast('Your reservation has been cancelled.');
+    } catch (error) {
+      showToast(error.message || 'Could not cancel this reservation. Please try again.');
+    } finally {
+      button.disabled = false;
     }
-    renderBookings();
-    showToast('Your reservation has been cancelled.');
   });
 
   modal.addEventListener('click', (event) => {
@@ -174,8 +182,12 @@ function bindInteractions() {
 
 export async function initMyBookingsPage() {
   if (!list || !emptyState) return;
-  const restaurants = await getFeaturedRestaurants();
-  restaurantsById = new Map(restaurants.map((restaurant) => [restaurant.id, restaurant]));
+  try {
+    bookings = await getBookings();
+  } catch (error) {
+    list.innerHTML = `<p class="rounded-xl bg-red-50 p-4 text-sm text-red-800">${error.message || 'Could not load bookings.'}</p>`;
+    return;
+  }
   bindInteractions();
   renderBookings();
 }

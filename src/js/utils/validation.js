@@ -15,22 +15,16 @@ export function validateLoginForm({ email, password }) {
   return errors;
 }
 
-export function validateRegistrationForm({ name, email, phone, password, confirmPassword, termsAccepted }) {
+export function validateRegistrationForm({ name, email, password, confirmPassword, termsAccepted }) {
   const errors = {};
   const cleanName = String(name || '').trim();
   const cleanEmail = String(email || '').trim();
-  const cleanPhone = String(phone || '').trim();
-  const phoneDigits = cleanPhone.replace(/\D/g, '');
-  const phoneHasValidCharacters = /^\+?[\d\s().-]+$/.test(cleanPhone);
 
   if (!cleanName) errors.name = 'Enter your full name.';
   else if (cleanName.length < 2) errors.name = 'Your name must contain at least 2 characters.';
 
   if (!cleanEmail) errors.email = 'Enter your email address.';
   else if (!isValidEmail(cleanEmail)) errors.email = 'Enter a valid email address.';
-
-  if (!cleanPhone) errors.phone = 'Enter your phone number.';
-  else if (!phoneHasValidCharacters || phoneDigits.length < 7 || phoneDigits.length > 15) errors.phone = 'Enter a valid phone number.';
 
   if (!password) errors.password = 'Create a password.';
   else if (password.length < 8) errors.password = 'Use at least 8 characters.';

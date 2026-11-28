@@ -6,7 +6,6 @@ const page = document.querySelector('[data-register-page]');
 const fieldIds = {
   name: 'register-name',
   email: 'register-email',
-  phone: 'register-phone',
   password: 'register-password',
   confirmPassword: 'register-confirm-password',
 };
@@ -81,7 +80,6 @@ function bindForm() {
     const values = {
       name: String(formData.get('name') || '').trim(),
       email: String(formData.get('email') || '').trim(),
-      phone: String(formData.get('phone') || '').trim(),
       password: String(formData.get('password') || ''),
       confirmPassword: String(formData.get('confirmPassword') || ''),
       termsAccepted: terms.checked,
@@ -105,18 +103,20 @@ function bindForm() {
     try {
       const result = await registerUser(values);
       if (!result.success) {
-        if (result.error === 'email-exists') {
-          setFieldError('email', 'An account with this email already exists.');
-          showMessage('error', 'Email already registered', 'Sign in with this email or use another email address.');
-        } else {
-          showMessage('error', 'Could not create account', 'Browser storage is unavailable. Check your browser settings and try again.');
+        if (result.fields) {
+          Object.entries(result.fields).forEach(([field, message]) => setFieldError(field, message));
         }
+        showMessage(
+          'error',
+          result.error === 'email_exists' ? 'Email already registered' : 'Could not create account',
+          result.message || 'Please check your details and try again.',
+        );
         return;
       }
 
-      showMessage('success', 'Account created successfully', 'Your account is ready. Taking you to sign in...');
+      showMessage('success', 'Verification code sent', 'Continue to email verification to finish setting up your account.');
       window.setTimeout(() => {
-        window.location.href = 'login.html';
+        window.location.href = `verify-email.html?email=${encodeURIComponent(values.email.trim())}`;
       }, 1000);
     } catch {
       showMessage('error', 'Could not create account', 'Something went wrong. Please try again.');
@@ -126,6 +126,7 @@ function bindForm() {
       submitButton.querySelector('[data-button-arrow]').classList.remove('hidden');
     }
   });
+
 }
 
 export function initRegisterPage() {

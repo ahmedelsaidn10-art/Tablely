@@ -107,6 +107,7 @@
               </div>
               <p id="review-eligibility-message" class="mt-4 hidden rounded-xl bg-surface-low px-4 py-3 text-sm text-on-surface-variant" role="status"></p>
               <div id="reviews-list" class="mt-6 grid gap-4" aria-live="polite"></div>
+              <nav id="reviews-pagination" class="mt-5 flex flex-wrap items-center justify-center gap-2" aria-label="Review pages"></nav>
             </section>
           </div>
 
@@ -124,11 +125,17 @@
 
               <fieldset>
                 <legend class="mb-2 text-sm font-semibold text-on-surface">Guests</legend>
-                <div id="guest-options" class="grid grid-cols-4 gap-2">
+                <div id="guest-options" class="grid grid-cols-5 gap-2">
+                  <button class="guest-option min-h-10 rounded-xl bg-surface-low px-2 text-sm font-semibold text-on-surface-variant" type="button" aria-pressed="false" data-guests="1">1</button>
                   <button class="guest-option min-h-10 rounded-xl bg-primary px-2 text-sm font-bold text-on-primary" type="button" aria-pressed="true" data-guests="2">2</button>
                   <button class="guest-option min-h-10 rounded-xl bg-surface-low px-2 text-sm font-semibold text-on-surface-variant" type="button" aria-pressed="false" data-guests="3">3</button>
                   <button class="guest-option min-h-10 rounded-xl bg-surface-low px-2 text-sm font-semibold text-on-surface-variant" type="button" aria-pressed="false" data-guests="4">4</button>
-                  <button class="guest-option min-h-10 rounded-xl bg-surface-low px-2 text-sm font-semibold text-on-surface-variant" type="button" aria-pressed="false" data-guests="5">5+</button>
+                  <button class="guest-option min-h-10 rounded-xl bg-surface-low px-2 text-sm font-semibold text-on-surface-variant" type="button" aria-pressed="false" data-guests="5">5</button>
+                  <button class="guest-option min-h-10 rounded-xl bg-surface-low px-2 text-sm font-semibold text-on-surface-variant" type="button" aria-pressed="false" data-guests="6">6</button>
+                  <button class="guest-option min-h-10 rounded-xl bg-surface-low px-2 text-sm font-semibold text-on-surface-variant" type="button" aria-pressed="false" data-guests="7">7</button>
+                  <button class="guest-option min-h-10 rounded-xl bg-surface-low px-2 text-sm font-semibold text-on-surface-variant" type="button" aria-pressed="false" data-guests="8">8</button>
+                  <button class="guest-option min-h-10 rounded-xl bg-surface-low px-2 text-sm font-semibold text-on-surface-variant" type="button" aria-pressed="false" data-guests="9">9</button>
+                  <button class="guest-option min-h-10 rounded-xl bg-surface-low px-2 text-sm font-semibold text-on-surface-variant" type="button" aria-pressed="false" data-guests="10">10</button>
                 </div>
               </fieldset>
 

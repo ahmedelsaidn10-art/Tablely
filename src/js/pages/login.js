@@ -1,5 +1,5 @@
-import { loginUser } from '../services/auth.service.js';
-import { validateLoginForm } from '../utils/validation.js';
+import { loginUser, resendVerificationCode } from '../services/auth.service.js';
+import { isValidEmail, validateLoginForm } from '../utils/validation.js';
 
 const page = document.querySelector('[data-login-page]');
 
@@ -57,6 +57,36 @@ function bindLoginForm() {
     clearMessage();
   });
 
+  document.querySelector('#login-resend-otp').addEventListener('click', async (event) => {
+    clearMessage();
+    const email = emailInput.value.trim();
+    if (!isValidEmail(email)) {
+      setFieldError(emailInput, emailError, email ? 'Enter a valid email address.' : 'Enter your account email first.');
+      emailInput.focus();
+      return;
+    }
+
+    const button = event.currentTarget;
+    button.disabled = true;
+    button.textContent = 'Sending OTP...';
+    try {
+      const result = await resendVerificationCode(email);
+      if (!result.success) {
+        showMessage('error', 'Could not send OTP', result.message || 'Please try again.');
+        return;
+      }
+      showMessage('success', 'OTP request sent', result.message || 'If the account needs verification, a new code will be sent.');
+      window.setTimeout(() => {
+        window.location.href = `verify-email.html?email=${encodeURIComponent(email)}`;
+      }, 900);
+    } catch {
+      showMessage('error', 'Could not send OTP', 'Please check your connection and try again.');
+    } finally {
+      button.disabled = false;
+      button.textContent = 'Send OTP to an existing account';
+    }
+  });
+
   form.addEventListener('submit', async (event) => {
     event.preventDefault();
     clearMessage();
@@ -80,14 +110,21 @@ function bindLoginForm() {
     try {
       const result = await loginUser({
         ...values,
-        rememberMe: document.querySelector('#remember-me').checked,
       });
 
       if (!result.success) {
-        const message = result.error === 'storage-unavailable'
-          ? 'Browser storage is unavailable, so we could not save your sign-in.'
-          : 'Check your email and password. If you are new to Tablely, create an account first.';
-        showMessage('error', 'Unable to sign in', message);
+        if (result.status === 403) {
+          showMessage('error', 'Verify your email first', result.message || 'Enter the verification code sent to your email.');
+          window.setTimeout(() => {
+            window.location.href = `verify-email.html?email=${encodeURIComponent(values.email)}`;
+          }, 1200);
+        } else {
+          showMessage(
+            'error',
+            'Unable to sign in',
+            result.message || 'Check your email and password, then try again.',
+          );
+        }
         return;
       }
 
